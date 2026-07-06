@@ -1,0 +1,7 @@
+import type { Testimonial } from "@/lib/types";
+
+export const testimonials: Testimonial[] = [
+  { id: 1, name: "Camila Rivas", role: "Food writer · Lima", rating: 5, avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=75&auto=format&fit=crop", quote: "No fui a cenar, fui a vivir algo. La barra, la luz, el ritmo de los platos… Doko entiende que una noche puede ser una obra." },
+  { id: 2, name: "Diego Salazar", role: "Cliente frecuente", rating: 5, avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=75&auto=format&fit=crop", quote: "El mejor Nikkei que he comido fuera de Tokio. El equilibrio entre el ají y el pescado es de otro nivel. Reservé de nuevo antes de irme." },
+  { id: 3, name: "Valeria Chang", role: "Miembro de la comunidad", rating: 5, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=75&auto=format&fit=crop", quote: "Poder revivir el evento después con las fotos de todos fue lo que me terminó de enamorar. Ya no es un restaurante, es un lugar al que pertenezco." },
+];

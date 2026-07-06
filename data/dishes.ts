@@ -1,0 +1,27 @@
+import type { Dish } from "@/lib/types";
+
+export const dishes: Dish[] = [
+  { id: 1, name: "Tiradito Doko", description: "Corvina, leche de tigre de ají amarillo, cancha crocante.", price: "S/ 48", category: "entradas", image: "https://images.unsplash.com/photo-1553621042-f6e147245754?w=700&q=78&auto=format&fit=crop", featured: true },
+  { id: 2, name: "Causa Nikkei", description: "Papa amarilla, atún picante, palta, tobiko.", price: "S/ 46", category: "entradas", image: "https://images.unsplash.com/photo-1607330289024-1535c6b4e1c1?w=700&q=78&auto=format&fit=crop" },
+  { id: 3, name: "Maki Acevichado", description: "Langostino tempura, palta, salsa acevichada, chalaquita.", price: "S/ 54", category: "makis", image: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=700&q=78&auto=format&fit=crop", featured: true },
+  { id: 4, name: "Maki Tigre", description: "Salmón, queso crema, láminas de palta, anguila kabayaki.", price: "S/ 58", category: "makis", image: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=700&q=78&auto=format&fit=crop" },
+  { id: 5, name: "Nigiri de Toro", description: "Ventresca de atún flameada, ponzu, ralladura de yuzu.", price: "S/ 62", category: "nigiris", image: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=700&q=78&auto=format&fit=crop", featured: true },
+  { id: 6, name: "Nigiri de Salmón", description: "Salmón fresco, toque de teriyaki, sésamo tostado.", price: "S/ 44", category: "nigiris", image: "https://images.unsplash.com/photo-1563612116625-3012372fccce?w=700&q=78&auto=format&fit=crop" },
+  { id: 7, name: "Sashimi Nikkei", description: "Selección del día, tres cortes, salsa de la casa.", price: "S/ 68", category: "sashimis", image: "https://images.unsplash.com/photo-1584583570840-0a3d88497593?w=700&q=78&auto=format&fit=crop", featured: true },
+  { id: 8, name: "Robata de Pulpo", description: "Pulpo al carbón, chimichurri nikkei, puré de aceituna.", price: "S/ 72", category: "calientes", image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=700&q=78&auto=format&fit=crop", featured: true },
+  { id: 9, name: "Gyoza de Ají", description: "Empanadillas de cerdo, ají panca, ponzu picante.", price: "S/ 42", category: "calientes", image: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=700&q=78&auto=format&fit=crop" },
+  { id: 10, name: "Mochi de Lúcuma", description: "Helado de lúcuma, mochi artesanal, crumble de kinako.", price: "S/ 34", category: "postres", image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=700&q=78&auto=format&fit=crop", featured: true },
+  { id: 11, name: "Tarta de Matcha", description: "Bizcocho de matcha, ganache blanco, frutos rojos.", price: "S/ 32", category: "postres", image: "https://images.unsplash.com/photo-1519676867240-f03562e64548?w=700&q=78&auto=format&fit=crop" },
+  { id: 12, name: "Sake Junmai", description: "Copa de sake premium, servido frío.", price: "S/ 38", category: "bebidas", image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=700&q=78&auto=format&fit=crop" },
+];
+
+export const menuCategories: { key: string; label: string }[] = [
+  { key: "all", label: "Todos" },
+  { key: "entradas", label: "Entradas" },
+  { key: "makis", label: "Makis" },
+  { key: "nigiris", label: "Nigiris" },
+  { key: "sashimis", label: "Sashimis" },
+  { key: "calientes", label: "Platos calientes" },
+  { key: "postres", label: "Postres" },
+  { key: "bebidas", label: "Bebidas" },
+];
