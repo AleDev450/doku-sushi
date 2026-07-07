@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile, canAccessAdmin } from "@/lib/auth";
+import { getPermissions } from "@/lib/rbac";
 import AdminShell from "@/components/admin/AdminShell";
 
 // El admin nunca se cachea: depende de la sesión.
@@ -14,5 +15,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect(profile ? "/login?error=inactive" : "/login?next=/admin");
   }
 
-  return <AdminShell profile={profile}>{children}</AdminShell>;
+  const permissions = await getPermissions(profile);
+
+  return (
+    <AdminShell profile={profile} permissions={permissions}>
+      {children}
+    </AdminShell>
+  );
 }

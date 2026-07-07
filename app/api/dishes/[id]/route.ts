@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import type { Dish, MenuCategory } from "@/lib/types";
 import { getDishById, updateDish, deleteDish } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/rbac";
 
 const CATEGORIES: MenuCategory[] = [
   "entradas", "makis", "nigiris", "sashimis", "calientes", "postres", "bebidas",
@@ -27,7 +27,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 }
 
 export async function PATCH(req: Request, { params }: Ctx) {
-  if (!(await requireAdmin())) {
+  if (!(await requirePermission("carta", "edit"))) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
@@ -73,7 +73,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
 }
 
 export async function DELETE(_req: Request, { params }: Ctx) {
-  if (!(await requireAdmin())) {
+  if (!(await requirePermission("carta", "edit"))) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 

@@ -10,17 +10,27 @@ import {
 import Seal from "@/components/ui/Seal";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/auth";
+import type { PermissionMap, SectionKey } from "@/lib/sections";
 import { signOut } from "@/app/admin/actions";
 
-const NAV = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  ready: boolean;
+  section?: SectionKey;
+  superadminOnly?: boolean;
+};
+
+const NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, ready: true },
-  { href: "/admin/carta", label: "Carta", icon: UtensilsCrossed, ready: true },
-  { href: "/admin/blog", label: "Blog", icon: Newspaper, ready: true },
-  { href: "/admin/eventos", label: "Eventos", icon: CalendarDays, ready: false },
-  { href: "/admin/galeria", label: "Galería", icon: Images, ready: false },
-  { href: "/admin/experiencias", label: "Experiencias", icon: MessageSquare, ready: false },
-  { href: "/admin/usuarios", label: "Usuarios", icon: Users, ready: false },
-  { href: "/admin/ajustes", label: "Ajustes", icon: Settings, ready: false },
+  { href: "/admin/carta", label: "Carta", icon: UtensilsCrossed, ready: true, section: "carta" },
+  { href: "/admin/blog", label: "Blog", icon: Newspaper, ready: true, section: "blog" },
+  { href: "/admin/eventos", label: "Eventos", icon: CalendarDays, ready: true, section: "eventos" },
+  { href: "/admin/galeria", label: "Galería", icon: Images, ready: false, section: "galeria" },
+  { href: "/admin/experiencias", label: "Experiencias", icon: MessageSquare, ready: false, section: "experiencias" },
+  { href: "/admin/usuarios", label: "Usuarios", icon: Users, ready: true, superadminOnly: true },
+  { href: "/admin/ajustes", label: "Ajustes", icon: Settings, ready: false, superadminOnly: true },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -34,9 +44,11 @@ const ROLE_LABEL: Record<Profile["role"], string> = {
 
 export default function AdminShell({
   profile,
+  permissions,
   children,
 }: {
   profile: Profile;
+  permissions: PermissionMap;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -44,6 +56,13 @@ export default function AdminShell({
 
   const displayName = profile.full_name || profile.email.split("@")[0];
   const initial = displayName.charAt(0).toUpperCase();
+
+  // Filtra el menú según rol y permisos de sección.
+  const nav = NAV.filter((n) => {
+    if (n.superadminOnly) return profile.role === "superadmin";
+    if (n.section) return permissions[n.section]?.view ?? false;
+    return true; // Dashboard u otros sin sección
+  });
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-paper">
@@ -61,7 +80,7 @@ export default function AdminShell({
         </div>
 
         <nav className="p-3">
-          {NAV.map((n) => {
+          {nav.map((n) => {
             const active = isActive(pathname, n.href);
 
             if (!n.ready) {

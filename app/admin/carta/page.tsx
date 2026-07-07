@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { getDishes } from "@/lib/api";
+import { assertSectionAccess } from "@/lib/rbac";
 import DishTable from "@/components/admin/DishTable";
 
 export const metadata: Metadata = { title: "Carta · Admin", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function AdminCartaPage() {
+  await assertSectionAccess("carta", "view");
   const dishes = await getDishes();
 
   return (

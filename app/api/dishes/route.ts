@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import type { Dish, MenuCategory } from "@/lib/types";
 import { getDishes, createDish } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/rbac";
 
 const CATEGORIES: MenuCategory[] = [
   "entradas", "makis", "nigiris", "sashimis", "calientes", "postres", "bebidas",
@@ -46,7 +46,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  if (!(await requireAdmin())) {
+  if (!(await requirePermission("carta", "edit"))) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 

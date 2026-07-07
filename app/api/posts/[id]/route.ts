@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import type { PostStatus } from "@/lib/types";
 import { getPostById, updatePost, deletePost, type PostInput } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/rbac";
 
 const STATUSES: PostStatus[] = ["draft", "published"];
 
@@ -25,7 +25,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 }
 
 export async function PATCH(req: Request, { params }: Ctx) {
-  if (!(await requireAdmin())) {
+  if (!(await requirePermission("blog", "edit"))) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
@@ -68,7 +68,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
 }
 
 export async function DELETE(_req: Request, { params }: Ctx) {
-  if (!(await requireAdmin())) {
+  if (!(await requirePermission("blog", "edit"))) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 

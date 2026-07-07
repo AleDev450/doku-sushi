@@ -145,6 +145,132 @@ export async function getEventSlugs(): Promise<string[]> {
   return (await readTable<EventDetail>("events")).map((e) => e.slug);
 }
 
+// --- Escritura de eventos (clave = slug) ---
+
+export type EventInput = Omit<EventDetail, "slug"> & { slug?: string };
+
+function eventToRow(slug: string, e: EventInput): Record<string, unknown> {
+  return {
+    slug,
+    title: e.title,
+    starts_at: e.startsAt,
+    location: e.location,
+    short_description: e.shortDescription,
+    cover: e.cover,
+    attendees_count: e.attendeesCount,
+    status: e.status,
+    attendees_preview: e.attendeesPreview,
+    full_description: e.fullDescription,
+    gallery: e.gallery,
+    videos: e.videos,
+    schedule: e.schedule,
+    guest_chef: e.guestChef,
+    special_menu: e.specialMenu,
+    map: e.map,
+  };
+}
+
+async function uniqueEventSlug(base: string, exceptSlug?: string): Promise<string> {
+  const root = slugify(base) || "evento";
+  const slugs = await getEventSlugs();
+  let slug = root;
+  let n = 2;
+  while (slugs.some((s) => s === slug && s !== exceptSlug)) slug = `${root}-${n++}`;
+  return slug;
+}
+
+export async function createEvent(input: EventInput): Promise<EventDetail> {
+  const slug = await uniqueEventSlug(input.slug || input.title);
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient()
+      .from("events").insert(eventToRow(slug, input)).select().single();
+    if (error) throw error;
+    return rowToEvent(data);
+  }
+  const events = await readTable<EventDetail>("events");
+  const event: EventDetail = { ...(input as Omit<EventDetail, "slug">), slug };
+  events.push(event);
+  await writeTable("events", events);
+  return event;
+}
+
+export async function updateEvent(currentSlug: string, input: EventInput): Promise<EventDetail | null> {
+  const slug = await uniqueEventSlug(input.slug || input.title, currentSlug);
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient()
+      .from("events").update(eventToRow(slug, input)).eq("slug", currentSlug).select().maybeSingle();
+    if (error) throw error;
+    return data ? rowToEvent(data) : null;
+  }
+  const events = await readTable<EventDetail>("events");
+  const i = events.findIndex((e) => e.slug === currentSlug);
+  if (i === -1) return null;
+  events[i] = { ...(input as Omit<EventDetail, "slug">), slug };
+  await writeTable("events", events);
+  return events[i];
+}
+
+export async function deleteEvent(slug: string): Promise<boolean> {
+  if (supabaseEnabled()) {
+    const { error, count } = await createAdminClient()
+      .from("events").delete({ count: "exact" }).eq("slug", slug);
+    if (error) throw error;
+    return (count ?? 0) > 0;
+  }
+  const events = await readTable<EventDetail>("events");
+  const i = events.findIndex((e) => e.slug === slug);
+  if (i === -1) return false;
+  events.splice(i, 1);
+  await writeTable("events", events);
+  return true;
+}
+
+/** Valida/normaliza el cuerpo de un evento (usado por los Route Handlers). */
+export function parseEventInput(body: unknown): { data: EventInput } | { error: string } {
+  if (typeof body !== "object" || body === null) return { error: "Cuerpo inválido." };
+  const b = body as Record<string, unknown>;
+
+  const title = typeof b.title === "string" ? b.title.trim() : "";
+  if (!title) return { error: "El título es obligatorio." };
+  const startsAt = typeof b.startsAt === "string" ? b.startsAt : "";
+  if (!startsAt) return { error: "La fecha y hora son obligatorias." };
+
+  const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+  const str = (v: unknown): string => (typeof v === "string" ? v : "");
+  const obj = (v: unknown): Record<string, unknown> | null =>
+    v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+
+  const gc = obj(b.guestChef);
+  const mp = obj(b.map);
+
+  return {
+    data: {
+      slug: typeof b.slug === "string" && b.slug.trim() ? b.slug.trim() : undefined,
+      title,
+      startsAt,
+      location: str(b.location),
+      shortDescription: str(b.shortDescription),
+      cover: str(b.cover),
+      attendeesCount: Number(b.attendeesCount) || 0,
+      status: b.status === "past" ? "past" : "upcoming",
+      attendeesPreview: arr<EventDetail["attendeesPreview"][number]>(b.attendeesPreview),
+      fullDescription: str(b.fullDescription),
+      gallery: arr<string>(b.gallery),
+      videos: arr<EventDetail["videos"][number]>(b.videos),
+      schedule: arr<EventDetail["schedule"][number]>(b.schedule),
+      guestChef: gc
+        ? { name: str(gc.name), role: str(gc.role), photo: str(gc.photo), bio: str(gc.bio) }
+        : null,
+      specialMenu: arr<EventDetail["specialMenu"][number]>(b.specialMenu),
+      map: {
+        lat: Number(mp?.lat) || 0,
+        lng: Number(mp?.lng) || 0,
+        address: str(mp?.address),
+      },
+    },
+  };
+}
+
 /* ------------------------------ Carta ------------------------------ */
 
 export async function getDishes(): Promise<Dish[]> {

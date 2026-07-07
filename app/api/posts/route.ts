@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import type { PostStatus } from "@/lib/types";
 import { getPosts, createPost, type PostInput } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/rbac";
 
 const STATUSES: PostStatus[] = ["draft", "published"];
 
@@ -47,7 +47,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  if (!(await requireAdmin())) {
+  if (!(await requirePermission("blog", "edit"))) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 

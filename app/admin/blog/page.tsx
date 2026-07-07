@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { getPosts } from "@/lib/api";
+import { assertSectionAccess } from "@/lib/rbac";
 import PostTable from "@/components/admin/PostTable";
 
 export const metadata: Metadata = { title: "Blog · Admin", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function AdminBlogPage() {
+  await assertSectionAccess("blog", "view");
   const posts = await getPosts();
   const published = posts.filter((p) => p.status === "published").length;
 
