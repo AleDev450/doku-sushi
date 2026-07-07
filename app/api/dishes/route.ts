@@ -1,12 +1,16 @@
-// GET  /api/dishes        -> lista de platos
-// POST /api/dishes        -> crea un plato
+// GET  /api/dishes  -> lista de platos
+// POST /api/dishes  -> crea un plato
 //
-// Persistencia local vía lib/db (archivo db/dishes.json).
+// La persistencia (Supabase o store local) la resuelve lib/api.
 
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import type { Dish, MenuCategory } from "@/lib/types";
-import { readTable, writeTable, nextId } from "@/lib/db";
+import { getDishes, createDish } from "@/lib/api";
+
+const CATEGORIES: MenuCategory[] = [
+  "entradas", "makis", "nigiris", "sashimis", "calientes", "postres", "bebidas",
+];
 
 /** Invalida las rutas públicas que muestran platos, para que reflejen cambios. */
 function revalidateDishes() {
@@ -15,11 +19,7 @@ function revalidateDishes() {
   revalidatePath("/admin/carta");
 }
 
-const CATEGORIES: MenuCategory[] = [
-  "entradas", "makis", "nigiris", "sashimis", "calientes", "postres", "bebidas",
-];
-
-/** Valida y normaliza el payload de un plato. Devuelve el objeto o un error. */
+/** Valida y normaliza el payload de un plato. */
 function parseDish(body: unknown): { data: Omit<Dish, "id"> } | { error: string } {
   if (typeof body !== "object" || body === null) return { error: "Cuerpo inválido." };
   const b = body as Record<string, unknown>;
@@ -40,7 +40,7 @@ function parseDish(body: unknown): { data: Omit<Dish, "id"> } | { error: string 
 }
 
 export async function GET() {
-  const dishes = await readTable<Dish>("dishes");
+  const dishes = await getDishes();
   return NextResponse.json(dishes);
 }
 
@@ -55,11 +55,14 @@ export async function POST(req: Request) {
   const parsed = parseDish(body);
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 422 });
 
-  const dishes = await readTable<Dish>("dishes");
-  const dish: Dish = { id: nextId(dishes), ...parsed.data };
-  dishes.push(dish);
-  await writeTable("dishes", dishes);
-  revalidateDishes();
-
-  return NextResponse.json(dish, { status: 201 });
+  try {
+    const dish = await createDish(parsed.data);
+    revalidateDishes();
+    return NextResponse.json(dish, { status: 201 });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "No se pudo crear el plato." },
+      { status: 500 }
+    );
+  }
 }

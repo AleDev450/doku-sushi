@@ -5,11 +5,13 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import type { Dish, MenuCategory } from "@/lib/types";
-import { readTable, writeTable } from "@/lib/db";
+import { getDishById, updateDish, deleteDish } from "@/lib/api";
 
 const CATEGORIES: MenuCategory[] = [
   "entradas", "makis", "nigiris", "sashimis", "calientes", "postres", "bebidas",
 ];
+
+type Ctx = { params: { id: string } };
 
 function revalidateDishes() {
   revalidatePath("/");
@@ -17,17 +19,10 @@ function revalidateDishes() {
   revalidatePath("/admin/carta");
 }
 
-type Ctx = { params: { id: string } };
-
-async function findDish(id: number): Promise<{ dishes: Dish[]; index: number }> {
-  const dishes = await readTable<Dish>("dishes");
-  return { dishes, index: dishes.findIndex((d) => d.id === id) };
-}
-
 export async function GET(_req: Request, { params }: Ctx) {
-  const { dishes, index } = await findDish(Number(params.id));
-  if (index === -1) return NextResponse.json({ error: "Plato no encontrado." }, { status: 404 });
-  return NextResponse.json(dishes[index]);
+  const dish = await getDishById(Number(params.id));
+  if (!dish) return NextResponse.json({ error: "Plato no encontrado." }, { status: 404 });
+  return NextResponse.json(dish);
 }
 
 export async function PATCH(req: Request, { params }: Ctx) {
@@ -38,39 +33,50 @@ export async function PATCH(req: Request, { params }: Ctx) {
     return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
   }
 
-  const { dishes, index } = await findDish(Number(params.id));
-  if (index === -1) return NextResponse.json({ error: "Plato no encontrado." }, { status: 404 });
-
-  const current = dishes[index];
-  const next: Dish = { ...current };
-
-  if (typeof body.name === "string") next.name = body.name.trim();
-  if (typeof body.description === "string") next.description = body.description.trim();
-  if (typeof body.price === "string") next.price = body.price.trim();
-  if (typeof body.image === "string") next.image = body.image.trim();
-  if (typeof body.featured === "boolean") next.featured = body.featured;
+  // Solo aceptamos campos conocidos y validados.
+  const patch: Partial<Omit<Dish, "id">> = {};
+  if (typeof body.name === "string") patch.name = body.name.trim();
+  if (typeof body.description === "string") patch.description = body.description.trim();
+  if (typeof body.price === "string") patch.price = body.price.trim();
+  if (typeof body.image === "string") patch.image = body.image.trim();
+  if (typeof body.featured === "boolean") patch.featured = body.featured;
   if (body.category !== undefined) {
     if (!CATEGORIES.includes(body.category as MenuCategory)) {
       return NextResponse.json({ error: "Categoría inválida." }, { status: 422 });
     }
-    next.category = body.category as MenuCategory;
+    patch.category = body.category as MenuCategory;
   }
 
-  if (!next.name) return NextResponse.json({ error: "El nombre es obligatorio." }, { status: 422 });
-  if (!next.price) return NextResponse.json({ error: "El precio es obligatorio." }, { status: 422 });
+  if (patch.name !== undefined && !patch.name) {
+    return NextResponse.json({ error: "El nombre no puede quedar vacío." }, { status: 422 });
+  }
+  if (patch.price !== undefined && !patch.price) {
+    return NextResponse.json({ error: "El precio no puede quedar vacío." }, { status: 422 });
+  }
 
-  dishes[index] = next;
-  await writeTable("dishes", dishes);
-  revalidateDishes();
-  return NextResponse.json(next);
+  try {
+    const updated = await updateDish(Number(params.id), patch);
+    if (!updated) return NextResponse.json({ error: "Plato no encontrado." }, { status: 404 });
+    revalidateDishes();
+    return NextResponse.json(updated);
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "No se pudo actualizar." },
+      { status: 500 }
+    );
+  }
 }
 
 export async function DELETE(_req: Request, { params }: Ctx) {
-  const { dishes, index } = await findDish(Number(params.id));
-  if (index === -1) return NextResponse.json({ error: "Plato no encontrado." }, { status: 404 });
-
-  const [removed] = dishes.splice(index, 1);
-  await writeTable("dishes", dishes);
-  revalidateDishes();
-  return NextResponse.json({ ok: true, removed });
+  try {
+    const ok = await deleteDish(Number(params.id));
+    if (!ok) return NextResponse.json({ error: "Plato no encontrado." }, { status: 404 });
+    revalidateDishes();
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "No se pudo eliminar." },
+      { status: 500 }
+    );
+  }
 }

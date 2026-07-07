@@ -1,14 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import Seal from "@/components/ui/Seal";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(
+    searchParams.get("error") === "inactive"
+      ? "Tu cuenta está pendiente de activación por el administrador."
+      : null
+  );
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (mode === "register") {
+      setError("Las cuentas del panel se crean por invitación del administrador.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (err) {
+        const msg = err.message.toLowerCase();
+        if (msg.includes("invalid login credentials")) {
+          setError("Correo o contraseña incorrectos.");
+        } else if (msg.includes("email not confirmed")) {
+          setError("Tu correo no está confirmado. Actívalo en Supabase (Auto Confirm User).");
+        } else {
+          setError(err.message);
+        }
+        setLoading(false);
+        return;
+      }
+
+      const next = searchParams.get("next") || "/admin";
+      router.push(next);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error inesperado al iniciar sesión.");
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-24">
@@ -33,10 +87,10 @@ export default function LoginPage() {
             {mode === "login" ? "Bienvenido de vuelta" : "Únete a Doko"}
           </h1>
           <p className="mb-7 text-center text-[0.88rem] text-mist">
-            {mode === "login" ? "Inicia sesión para revivir tus experiencias." : "Crea tu cuenta y sé parte de la comunidad."}
+            {mode === "login" ? "Inicia sesión para acceder al panel." : "Crea tu cuenta y sé parte de la comunidad."}
           </p>
 
-          {/* Social */}
+          {/* Social (próximamente) */}
           <div className="space-y-3">
             <SocialBtn label="Continuar con Google" logo="G" />
             <SocialBtn label="Continuar con Facebook" logo="f" />
@@ -50,7 +104,7 @@ export default function LoginPage() {
           </div>
 
           {/* Email */}
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
               <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-mist-2" />
               <input
@@ -58,6 +112,8 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Correo electrónico"
+                autoComplete="email"
+                required
                 className="field-input !pl-11"
               />
             </div>
@@ -68,19 +124,39 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Contraseña"
+                autoComplete="current-password"
+                required
                 className="field-input !pl-11"
               />
             </div>
-            <button className="btn btn-solid group w-full !py-3.5">
-              {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
-              <ArrowRight size={16} className="transition-transform duration-500 ease-premium group-hover:translate-x-1" />
+
+            {error && (
+              <p className="rounded-md border border-seal/40 bg-seal/10 px-3 py-2.5 text-[0.82rem] text-seal">
+                {error}
+              </p>
+            )}
+
+            <button type="submit" disabled={loading} className="btn btn-solid group w-full !py-3.5 disabled:opacity-60">
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Entrando…
+                </>
+              ) : (
+                <>
+                  {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+                  <ArrowRight size={16} className="transition-transform duration-500 ease-premium group-hover:translate-x-1" />
+                </>
+              )}
             </button>
-          </div>
+          </form>
 
           <p className="mt-6 text-center text-[0.85rem] text-mist">
             {mode === "login" ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
             <button
-              onClick={() => setMode(mode === "login" ? "register" : "login")}
+              onClick={() => {
+                setError(null);
+                setMode(mode === "login" ? "register" : "login");
+              }}
               className="font-medium text-seal hover:underline"
             >
               {mode === "login" ? "Regístrate" : "Inicia sesión"}
@@ -98,7 +174,12 @@ export default function LoginPage() {
 
 function SocialBtn({ label, logo }: { label: string; logo: string }) {
   return (
-    <button className="flex w-full items-center justify-center gap-3 rounded-full border border-[var(--line)] bg-white/[0.03] py-3 text-[0.88rem] transition-colors hover:border-white/40 hover:bg-white/[0.06]">
+    <button
+      type="button"
+      title="Próximamente"
+      disabled
+      className="flex w-full cursor-not-allowed items-center justify-center gap-3 rounded-full border border-[var(--line)] bg-white/[0.03] py-3 text-[0.88rem] opacity-60"
+    >
       <span className="grid h-5 w-5 place-items-center rounded-full bg-white text-[0.8rem] font-bold text-ink">{logo}</span>
       {label}
     </button>
