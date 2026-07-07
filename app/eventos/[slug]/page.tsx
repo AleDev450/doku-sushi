@@ -7,6 +7,7 @@ import { getEvent, getEventSlugs } from "@/lib/api";
 import { longDate, timeOf } from "@/lib/utils";
 import Reveal from "@/components/ui/Reveal";
 import { EventGallery, VideoGrid } from "@/components/events/EventGallery";
+import Feedback from "@/components/feedback/Feedback";
 
 export async function generateStaticParams() {
   return (await getEventSlugs()).map((slug) => ({ slug }));
@@ -147,6 +148,8 @@ export default async function EventoDetailPage({ params }: { params: { slug: str
           </aside>
         </div>
       </section>
+
+      <Feedback targetType="event" targetSlug={event.slug} />
     </>
   );
 }

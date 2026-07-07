@@ -37,7 +37,7 @@ function isActive(pathname: string, href: string): boolean {
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 }
 
-const ROLE_LABEL: Record<Profile["role"], string> = {
+const ROLE_LABEL: Record<string, string> = {
   superadmin: "Superadmin",
   editor: "Editor",
 };

@@ -6,7 +6,7 @@ import { UserPlus, Trash2, Loader2, ShieldCheck, Check, X } from "lucide-react";
 import type { Profile, Role } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
-const ROLE_LABEL: Record<Role, string> = { superadmin: "Superadmin", editor: "Editor" };
+const ROLE_LABEL: Record<string, string> = { superadmin: "Superadmin", editor: "Editor" };
 
 export default function UsersManager({ users, meId }: { users: Profile[]; meId: string }) {
   const router = useRouter();

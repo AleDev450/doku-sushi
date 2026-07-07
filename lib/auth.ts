@@ -5,12 +5,14 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type Role = "superadmin" | "editor";
+export type Role = "superadmin" | "editor" | "user";
+export type StaffRole = "superadmin" | "editor";
 
 export type Profile = {
   id: string;
   email: string;
   full_name: string | null;
+  avatar_url: string | null;
   role: Role;
   active: boolean;
 };
@@ -25,16 +27,22 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
 
   const { data } = await createAdminClient()
     .from("profiles")
-    .select("id, email, full_name, role, active")
+    .select("id, email, full_name, avatar_url, role, active")
     .eq("id", user.id)
     .maybeSingle();
 
   return (data as Profile) ?? null;
 });
 
-/** True si el profile puede acceder al panel admin (activo y con rol válido). */
+/** True si el profile es STAFF (superadmin/editor) activo → puede entrar al /admin. */
 export function canAccessAdmin(profile: Profile | null): profile is Profile {
-  return Boolean(profile && profile.active);
+  return Boolean(profile && profile.active && (profile.role === "superadmin" || profile.role === "editor"));
+}
+
+/** Guard para acciones de cualquier usuario logueado y activo (incluye rol 'user'). */
+export async function requireUser(): Promise<Profile | null> {
+  const profile = await getCurrentProfile();
+  return profile && profile.active ? profile : null;
 }
 
 /**

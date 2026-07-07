@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Seal from "@/components/ui/Seal";
+import UserMenu from "@/components/layout/UserMenu";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -75,9 +76,9 @@ export default function Navbar() {
         </nav>
 
         <div className="z-[2] flex items-center gap-4">
-          <Link href="/login" className="hidden text-[0.82rem] tracking-wide text-mist transition-colors hover:text-white sm:block">
-            Login
-          </Link>
+          <div className="hidden sm:block">
+            <UserMenu />
+          </div>
           <Link href="/reservar" className="btn btn-solid hidden sm:inline-flex">
             Reservar
           </Link>
@@ -107,8 +108,8 @@ export default function Navbar() {
             {l.label}
           </Link>
         ))}
-        <div className="mt-8 flex gap-4">
-          <Link href="/login" className="btn btn-ghost">Login</Link>
+        <div className="mt-8 flex items-center gap-4">
+          <UserMenu />
           <Link href="/reservar" className="btn btn-solid">Reservar</Link>
         </div>
       </div>

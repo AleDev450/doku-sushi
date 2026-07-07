@@ -7,6 +7,7 @@ import { getExperience, getExperienceSlugs } from "@/lib/api";
 import Reveal from "@/components/ui/Reveal";
 import Stars from "@/components/ui/Stars";
 import AlbumGrid from "@/components/experiences/AlbumGrid";
+import Feedback from "@/components/feedback/Feedback";
 
 export async function generateStaticParams() {
   return (await getExperienceSlugs()).map((slug) => ({ slug }));
@@ -98,14 +99,10 @@ export default async function ExperienciaDetailPage({ params }: { params: { slug
             ))}
           </div>
 
-          <div className="mt-12 rounded-lg border border-dashed border-[var(--line)] bg-ink p-8 text-center">
-            <Star size={22} className="mx-auto mb-3 text-seal" />
-            <p className="mb-4 font-display text-[1.2rem]">¿Estuviste en esta noche?</p>
-            <p className="mb-6 text-[0.9rem] text-mist">Inicia sesión para subir tus fotos y dejar tu reseña.</p>
-            <Link href="/login" className="btn btn-solid">Iniciar sesión</Link>
-          </div>
         </div>
       </section>
+
+      <Feedback targetType="experience" targetSlug={exp.slug} />
     </>
   );
 }

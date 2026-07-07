@@ -60,7 +60,8 @@ export async function assertSectionAccess(section: SectionKey, action: "view" | 
 export async function listProfiles(): Promise<Profile[]> {
   const { data } = await createAdminClient()
     .from("profiles")
-    .select("id, email, full_name, role, active")
+    .select("id, email, full_name, avatar_url, role, active")
+    .in("role", ["superadmin", "editor"])
     .order("created_at", { ascending: true });
   return (data as Profile[]) ?? [];
 }
