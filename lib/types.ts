@@ -108,3 +108,24 @@ export interface ExperienceDetail extends ExperienceSummary {
   topComments: ExperienceComment[];
   story: string;
 }
+
+/* ------------------------------- Blog ------------------------------- */
+
+export type PostStatus = "draft" | "published";
+
+export interface Post {
+  id: number;
+  slug: string;
+  title: string;
+  excerpt: string;
+  /** Cuerpo del post en Markdown. */
+  body: string;
+  cover: string;
+  author: string;
+  tags: string[];
+  status: PostStatus;
+  /** ISO, o null si aún es borrador. */
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

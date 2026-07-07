@@ -14,6 +14,7 @@ const LINKS = [
   { href: "/carta", label: "Carta" },
   { href: "/galeria", label: "Galería" },
   { href: "/experiencias", label: "Experiencias" },
+  { href: "/blog", label: "Blog" },
   { href: "/contacto", label: "Contacto" },
 ];
 

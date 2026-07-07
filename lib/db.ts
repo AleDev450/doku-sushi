@@ -17,7 +17,7 @@ import { gallery } from "@/data/gallery";
 import { testimonials } from "@/data/testimonials";
 import { experiences } from "@/data/experiences";
 
-export type TableName = "events" | "dishes" | "gallery" | "testimonials" | "experiences";
+export type TableName = "events" | "dishes" | "gallery" | "testimonials" | "experiences" | "posts";
 
 const DB_DIR = path.join(process.cwd(), "db");
 
@@ -28,6 +28,7 @@ const SEEDS: Record<TableName, unknown[]> = {
   gallery,
   testimonials,
   experiences,
+  posts: [], // el blog nace vacío; se llena desde el admin
 };
 
 function fileFor(table: TableName): string {

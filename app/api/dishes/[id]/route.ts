@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import type { Dish, MenuCategory } from "@/lib/types";
 import { getDishById, updateDish, deleteDish } from "@/lib/api";
+import { requireAdmin } from "@/lib/auth";
 
 const CATEGORIES: MenuCategory[] = [
   "entradas", "makis", "nigiris", "sashimis", "calientes", "postres", "bebidas",
@@ -26,6 +27,10 @@ export async function GET(_req: Request, { params }: Ctx) {
 }
 
 export async function PATCH(req: Request, { params }: Ctx) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = (await req.json()) as Record<string, unknown>;
@@ -68,6 +73,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
 }
 
 export async function DELETE(_req: Request, { params }: Ctx) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+
   try {
     const ok = await deleteDish(Number(params.id));
     if (!ok) return NextResponse.json({ error: "Plato no encontrado." }, { status: 404 });

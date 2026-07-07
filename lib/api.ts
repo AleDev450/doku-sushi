@@ -15,8 +15,10 @@ import type {
   Testimonial,
   ExperienceDetail,
   ExperienceSummary,
+  Post,
+  PostStatus,
 } from "@/lib/types";
-import { readTable, writeTable, nextId } from "@/lib/db";
+import { readTable, writeTable, nextId, slugify } from "@/lib/db";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function supabaseEnabled(): boolean {
@@ -278,4 +280,195 @@ export async function getExperienceSlugs(): Promise<string[]> {
     return (data ?? []).map((r: any) => r.slug);
   }
   return (await readTable<ExperienceDetail>("experiences")).map((e) => e.slug);
+}
+
+/* ------------------------------- Blog ------------------------------- */
+
+function rowToPost(r: any): Post {
+  return {
+    id: r.id,
+    slug: r.slug,
+    title: r.title,
+    excerpt: r.excerpt ?? "",
+    body: r.body ?? "",
+    cover: r.cover ?? "",
+    author: r.author ?? "Doko",
+    tags: r.tags ?? [],
+    status: r.status,
+    publishedAt: r.published_at ?? null,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export type PostInput = {
+  title: string;
+  slug?: string;
+  excerpt: string;
+  body: string;
+  cover: string;
+  author: string;
+  tags: string[];
+  status: PostStatus;
+};
+
+export async function getPosts(): Promise<Post[]> {
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient()
+      .from("posts").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(rowToPost);
+  }
+  return readTable<Post>("posts");
+}
+
+export async function getPublishedPosts(): Promise<Post[]> {
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient()
+      .from("posts").select("*").eq("status", "published").order("published_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(rowToPost);
+  }
+  return (await readTable<Post>("posts")).filter((p) => p.status === "published");
+}
+
+export async function getPost(slug: string): Promise<Post | null> {
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient()
+      .from("posts").select("*").eq("slug", slug).maybeSingle();
+    if (error) throw error;
+    return data ? rowToPost(data) : null;
+  }
+  return (await readTable<Post>("posts")).find((p) => p.slug === slug) ?? null;
+}
+
+export async function getPostById(id: number): Promise<Post | null> {
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient()
+      .from("posts").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? rowToPost(data) : null;
+  }
+  return (await readTable<Post>("posts")).find((p) => p.id === id) ?? null;
+}
+
+export async function getPublishedPostSlugs(): Promise<string[]> {
+  return (await getPublishedPosts()).map((p) => p.slug);
+}
+
+/** Genera un slug único a partir de un texto (evita choques con otros posts). */
+async function uniquePostSlug(base: string, exceptId?: number): Promise<string> {
+  const root = slugify(base) || "post";
+  const posts = await getPosts();
+  let slug = root;
+  let n = 2;
+  while (posts.some((p) => p.slug === slug && p.id !== exceptId)) {
+    slug = `${root}-${n++}`;
+  }
+  return slug;
+}
+
+export async function createPost(input: PostInput): Promise<Post> {
+  const slug = await uniquePostSlug(input.slug || input.title);
+  const publishedAt = input.status === "published" ? new Date().toISOString() : null;
+
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient()
+      .from("posts")
+      .insert({
+        slug,
+        title: input.title,
+        excerpt: input.excerpt,
+        body: input.body,
+        cover: input.cover,
+        author: input.author,
+        tags: input.tags,
+        status: input.status,
+        published_at: publishedAt,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return rowToPost(data);
+  }
+
+  const posts = await readTable<Post>("posts");
+  const now = new Date().toISOString();
+  const post: Post = {
+    id: nextId(posts),
+    slug,
+    title: input.title,
+    excerpt: input.excerpt,
+    body: input.body,
+    cover: input.cover,
+    author: input.author,
+    tags: input.tags,
+    status: input.status,
+    publishedAt,
+    createdAt: now,
+    updatedAt: now,
+  };
+  posts.push(post);
+  await writeTable("posts", posts);
+  return post;
+}
+
+export async function updatePost(id: number, patch: Partial<PostInput>): Promise<Post | null> {
+  const current = await getPostById(id);
+  if (!current) return null;
+
+  // Recalcular slug si cambió el título o el slug manual.
+  let slug = current.slug;
+  if (patch.slug !== undefined || patch.title !== undefined) {
+    slug = await uniquePostSlug(patch.slug || patch.title || current.title, id);
+  }
+
+  // published_at: se fija al publicar por primera vez; se limpia al pasar a borrador.
+  let publishedAt = current.publishedAt;
+  if (patch.status === "published" && !current.publishedAt) publishedAt = new Date().toISOString();
+  if (patch.status === "draft") publishedAt = null;
+
+  if (supabaseEnabled()) {
+    const row: Record<string, unknown> = { slug, published_at: publishedAt };
+    if (patch.title !== undefined) row.title = patch.title;
+    if (patch.excerpt !== undefined) row.excerpt = patch.excerpt;
+    if (patch.body !== undefined) row.body = patch.body;
+    if (patch.cover !== undefined) row.cover = patch.cover;
+    if (patch.author !== undefined) row.author = patch.author;
+    if (patch.tags !== undefined) row.tags = patch.tags;
+    if (patch.status !== undefined) row.status = patch.status;
+
+    const { data, error } = await createAdminClient()
+      .from("posts").update(row).eq("id", id).select().maybeSingle();
+    if (error) throw error;
+    return data ? rowToPost(data) : null;
+  }
+
+  const posts = await readTable<Post>("posts");
+  const i = posts.findIndex((p) => p.id === id);
+  if (i === -1) return null;
+  posts[i] = {
+    ...posts[i],
+    ...patch,
+    slug,
+    publishedAt,
+    updatedAt: new Date().toISOString(),
+  };
+  await writeTable("posts", posts);
+  return posts[i];
+}
+
+export async function deletePost(id: number): Promise<boolean> {
+  if (supabaseEnabled()) {
+    const { error, count } = await createAdminClient()
+      .from("posts").delete({ count: "exact" }).eq("id", id);
+    if (error) throw error;
+    return (count ?? 0) > 0;
+  }
+  const posts = await readTable<Post>("posts");
+  const i = posts.findIndex((p) => p.id === id);
+  if (i === -1) return false;
+  posts.splice(i, 1);
+  await writeTable("posts", posts);
+  return true;
 }

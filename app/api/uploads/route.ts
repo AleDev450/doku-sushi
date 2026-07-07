@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth";
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
 const BUCKET = "media";
@@ -30,6 +31,10 @@ function supabaseEnabled(): boolean {
 }
 
 export async function POST(req: Request) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+
   let form: FormData;
   try {
     form = await req.formData();

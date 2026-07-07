@@ -36,3 +36,12 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
 export function canAccessAdmin(profile: Profile | null): profile is Profile {
   return Boolean(profile && profile.active);
 }
+
+/**
+ * Guard para Route Handlers de escritura: devuelve el profile si el usuario
+ * está logueado y activo, o null si no está autorizado (responder 401).
+ */
+export async function requireAdmin(): Promise<Profile | null> {
+  const profile = await getCurrentProfile();
+  return canAccessAdmin(profile) ? profile : null;
+}

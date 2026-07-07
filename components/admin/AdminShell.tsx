@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, CalendarDays, UtensilsCrossed, Images,
-  MessageSquare, Users, Settings, LogOut, Menu, X, Bell, Search,
+  MessageSquare, Users, Settings, LogOut, Menu, X, Bell, Search, Newspaper,
 } from "lucide-react";
 import Seal from "@/components/ui/Seal";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import { signOut } from "@/app/admin/actions";
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, ready: true },
   { href: "/admin/carta", label: "Carta", icon: UtensilsCrossed, ready: true },
+  { href: "/admin/blog", label: "Blog", icon: Newspaper, ready: true },
   { href: "/admin/eventos", label: "Eventos", icon: CalendarDays, ready: false },
   { href: "/admin/galeria", label: "Galería", icon: Images, ready: false },
   { href: "/admin/experiencias", label: "Experiencias", icon: MessageSquare, ready: false },
