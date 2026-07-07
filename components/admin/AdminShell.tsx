@@ -27,8 +27,8 @@ const NAV: NavItem[] = [
   { href: "/admin/carta", label: "Carta", icon: UtensilsCrossed, ready: true, section: "carta" },
   { href: "/admin/blog", label: "Blog", icon: Newspaper, ready: true, section: "blog" },
   { href: "/admin/eventos", label: "Eventos", icon: CalendarDays, ready: true, section: "eventos" },
-  { href: "/admin/galeria", label: "Galería", icon: Images, ready: false, section: "galeria" },
-  { href: "/admin/experiencias", label: "Experiencias", icon: MessageSquare, ready: false, section: "experiencias" },
+  { href: "/admin/galeria", label: "Galería", icon: Images, ready: true, section: "galeria" },
+  { href: "/admin/experiencias", label: "Experiencias", icon: MessageSquare, ready: true, section: "experiencias" },
   { href: "/admin/usuarios", label: "Usuarios", icon: Users, ready: true, superadminOnly: true },
   { href: "/admin/ajustes", label: "Ajustes", icon: Settings, ready: false, superadminOnly: true },
 ];

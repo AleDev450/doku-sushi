@@ -361,6 +361,68 @@ export async function getGallery(): Promise<GalleryImage[]> {
   return readTable<GalleryImage>("gallery");
 }
 
+export type GalleryInput = Omit<GalleryImage, "id">;
+
+function galleryToRow(g: GalleryInput): Record<string, unknown> {
+  return { src: g.src, full: g.full, caption: g.caption, filter: g.filter, span: g.span ?? null };
+}
+
+export async function getGalleryById(id: number): Promise<GalleryImage | null> {
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient().from("gallery").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? rowToGallery(data) : null;
+  }
+  return (await readTable<GalleryImage>("gallery")).find((g) => g.id === id) ?? null;
+}
+
+export async function createGalleryImage(input: GalleryInput): Promise<GalleryImage> {
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient().from("gallery").insert(galleryToRow(input)).select().single();
+    if (error) throw error;
+    return rowToGallery(data);
+  }
+  const gallery = await readTable<GalleryImage>("gallery");
+  const img: GalleryImage = { id: nextId(gallery), ...input };
+  gallery.push(img);
+  await writeTable("gallery", gallery);
+  return img;
+}
+
+export async function updateGalleryImage(id: number, patch: Partial<GalleryInput>): Promise<GalleryImage | null> {
+  if (supabaseEnabled()) {
+    const row: Record<string, unknown> = {};
+    if (patch.src !== undefined) row.src = patch.src;
+    if (patch.full !== undefined) row.full = patch.full;
+    if (patch.caption !== undefined) row.caption = patch.caption;
+    if (patch.filter !== undefined) row.filter = patch.filter;
+    if (patch.span !== undefined) row.span = patch.span ?? null;
+    const { data, error } = await createAdminClient().from("gallery").update(row).eq("id", id).select().maybeSingle();
+    if (error) throw error;
+    return data ? rowToGallery(data) : null;
+  }
+  const gallery = await readTable<GalleryImage>("gallery");
+  const i = gallery.findIndex((g) => g.id === id);
+  if (i === -1) return null;
+  gallery[i] = { ...gallery[i], ...patch };
+  await writeTable("gallery", gallery);
+  return gallery[i];
+}
+
+export async function deleteGalleryImage(id: number): Promise<boolean> {
+  if (supabaseEnabled()) {
+    const { error, count } = await createAdminClient().from("gallery").delete({ count: "exact" }).eq("id", id);
+    if (error) throw error;
+    return (count ?? 0) > 0;
+  }
+  const gallery = await readTable<GalleryImage>("gallery");
+  const i = gallery.findIndex((g) => g.id === id);
+  if (i === -1) return false;
+  gallery.splice(i, 1);
+  await writeTable("gallery", gallery);
+  return true;
+}
+
 /* --------------------------- Testimonios --------------------------- */
 
 export async function getTestimonials(): Promise<Testimonial[]> {
@@ -406,6 +468,112 @@ export async function getExperienceSlugs(): Promise<string[]> {
     return (data ?? []).map((r: any) => r.slug);
   }
   return (await readTable<ExperienceDetail>("experiences")).map((e) => e.slug);
+}
+
+// --- Escritura de experiencias (clave = slug) ---
+
+export type ExperienceInput = Omit<ExperienceDetail, "slug"> & { slug?: string };
+
+function experienceToRow(slug: string, e: ExperienceInput): Record<string, unknown> {
+  return {
+    slug,
+    event_title: e.eventTitle,
+    date: e.date,
+    cover: e.cover,
+    rating: e.rating,
+    reviews: e.reviews,
+    attendees: e.attendees,
+    photos: e.photos,
+    videos: e.videos,
+    album: e.album,
+    top_comments: e.topComments,
+    story: e.story,
+  };
+}
+
+async function uniqueExperienceSlug(base: string, exceptSlug?: string): Promise<string> {
+  const root = slugify(base) || "experiencia";
+  const slugs = await getExperienceSlugs();
+  let slug = root;
+  let n = 2;
+  while (slugs.some((s) => s === slug && s !== exceptSlug)) slug = `${root}-${n++}`;
+  return slug;
+}
+
+export async function createExperience(input: ExperienceInput): Promise<ExperienceDetail> {
+  const slug = await uniqueExperienceSlug(input.slug || input.eventTitle);
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient()
+      .from("experiences").insert(experienceToRow(slug, input)).select().single();
+    if (error) throw error;
+    return rowToExperience(data);
+  }
+  const rows = await readTable<ExperienceDetail>("experiences");
+  const exp: ExperienceDetail = { ...(input as Omit<ExperienceDetail, "slug">), slug };
+  rows.push(exp);
+  await writeTable("experiences", rows);
+  return exp;
+}
+
+export async function updateExperience(currentSlug: string, input: ExperienceInput): Promise<ExperienceDetail | null> {
+  const slug = await uniqueExperienceSlug(input.slug || input.eventTitle, currentSlug);
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient()
+      .from("experiences").update(experienceToRow(slug, input)).eq("slug", currentSlug).select().maybeSingle();
+    if (error) throw error;
+    return data ? rowToExperience(data) : null;
+  }
+  const rows = await readTable<ExperienceDetail>("experiences");
+  const i = rows.findIndex((e) => e.slug === currentSlug);
+  if (i === -1) return null;
+  rows[i] = { ...(input as Omit<ExperienceDetail, "slug">), slug };
+  await writeTable("experiences", rows);
+  return rows[i];
+}
+
+export async function deleteExperience(slug: string): Promise<boolean> {
+  if (supabaseEnabled()) {
+    const { error, count } = await createAdminClient()
+      .from("experiences").delete({ count: "exact" }).eq("slug", slug);
+    if (error) throw error;
+    return (count ?? 0) > 0;
+  }
+  const rows = await readTable<ExperienceDetail>("experiences");
+  const i = rows.findIndex((e) => e.slug === slug);
+  if (i === -1) return false;
+  rows.splice(i, 1);
+  await writeTable("experiences", rows);
+  return true;
+}
+
+/** Valida/normaliza el cuerpo de una experiencia (usado por los Route Handlers). */
+export function parseExperienceInput(body: unknown): { data: ExperienceInput } | { error: string } {
+  if (typeof body !== "object" || body === null) return { error: "Cuerpo inválido." };
+  const b = body as Record<string, unknown>;
+
+  const eventTitle = typeof b.eventTitle === "string" ? b.eventTitle.trim() : "";
+  if (!eventTitle) return { error: "El título del evento es obligatorio." };
+
+  const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+  const str = (v: unknown): string => (typeof v === "string" ? v : "");
+  const num = (v: unknown): number => Number(v) || 0;
+
+  return {
+    data: {
+      slug: typeof b.slug === "string" && b.slug.trim() ? b.slug.trim() : undefined,
+      eventTitle,
+      date: str(b.date),
+      cover: str(b.cover),
+      rating: num(b.rating),
+      reviews: num(b.reviews),
+      attendees: num(b.attendees),
+      photos: num(b.photos),
+      videos: num(b.videos),
+      album: arr<ExperienceDetail["album"][number]>(b.album),
+      topComments: arr<ExperienceDetail["topComments"][number]>(b.topComments),
+      story: str(b.story),
+    },
+  };
 }
 
 /* ------------------------------- Blog ------------------------------- */
