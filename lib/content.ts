@@ -94,12 +94,18 @@ export type PageHeaders = {
   eventos: Header;
   galeria: Header;
   experiencias: Header;
+  blog: Header;
+  reservar: Header;
+  contacto: Header;
 };
 export const PAGE_HEADERS_DEFAULT: PageHeaders = {
   carta: { kicker: "お品書き · La carta", title: "La", highlight: "carta.", subtitle: "Producto peruano, técnica japonesa. Una selección que cambia con la estación y con lo que llega fresco a la barra." },
   eventos: { kicker: "催し · Agenda", title: "Nuestros", highlight: "eventos.", subtitle: "Noches temáticas, chefs invitados y menús irrepetibles. Reserva tu lugar o revive los que ya pasaron." },
   galeria: { kicker: "写真 · Galería", title: "El lente de", highlight: "Doko.", subtitle: "Comida, gente y noches. Toca cualquier imagen para verla en grande." },
   experiencias: { kicker: "思い出 · Álbum digital", title: "Revive cada", highlight: "experiencia.", subtitle: "Cuando la noche termina, el evento no muere. Se convierte en un álbum de fotos, videos y voces de quienes estuvieron ahí." },
+  blog: { kicker: "読み物 · Blog", title: "Desde la", highlight: "barra.", subtitle: "Historias, técnica y la comunidad que se sienta cada noche en Doko." },
+  reservar: { kicker: "予約 · Reserva", title: "Reserva tu", highlight: "mesa.", subtitle: "Las noches en Doko son limitadas. Completa tus datos y confirmamos tu lugar en la barra." },
+  contacto: { kicker: "連絡 · Contacto", title: "Hablemos.", highlight: "", subtitle: "¿Una reserva especial, un evento privado o una consulta? Estamos a un mensaje de distancia." },
 };
 
 export type AboutPage = {

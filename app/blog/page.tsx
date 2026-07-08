@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getPublishedPosts } from "@/lib/api";
+import { getPageContent, PAGE_HEADERS_DEFAULT } from "@/lib/content";
 import { longDate } from "@/lib/utils";
 import Reveal from "@/components/ui/Reveal";
 
@@ -13,18 +14,17 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function BlogPage() {
-  const posts = await getPublishedPosts();
+  const [posts, headers] = await Promise.all([getPublishedPosts(), getPageContent("page_headers", PAGE_HEADERS_DEFAULT)]);
+  const h = headers.blog;
 
   return (
     <div className="bg-ink">
       <section className="wrap py-[clamp(90px,12vw,130px)]">
-        <span className="kicker mb-5 block">読み物 · Blog</span>
+        <span className="kicker mb-5 block">{h.kicker}</span>
         <h1 className="display text-[clamp(2.2rem,5vw,3.6rem)]">
-          Desde la <span className="text-seal">barra.</span>
+          {h.title} <span className="text-seal">{h.highlight}</span>
         </h1>
-        <p className="mt-5 max-w-[560px] text-[1.02rem] text-mist">
-          Historias, técnica y la comunidad que se sienta cada noche en Doko.
-        </p>
+        <p className="mt-5 max-w-[560px] text-[1.02rem] text-mist">{h.subtitle}</p>
 
         {posts.length === 0 ? (
           <p className="mt-16 text-mist-2">Aún no hay publicaciones. Vuelve pronto.</p>

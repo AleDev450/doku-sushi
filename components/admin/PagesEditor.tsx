@@ -157,7 +157,7 @@ export default function PagesEditor({ initial }: { initial: Blocks }) {
       {tab === "headers" && (
         <div className="space-y-5">
           <Card title="Encabezados de las páginas">
-            {(["carta", "eventos", "galeria", "experiencias"] as const).map((k) => (
+            {(["carta", "eventos", "galeria", "experiencias", "blog", "reservar", "contacto"] as const).map((k) => (
               <div key={k}>
                 <div className="field-label capitalize">{k}</div>
                 <HeaderFields value={b.headers[k]} onChange={(v) => upd("headers", { ...b.headers, [k]: v })} />
