@@ -6,7 +6,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, CalendarDays, UtensilsCrossed, Images,
   MessageSquare, Users, Settings, LogOut, Menu, X, Bell, Search, Newspaper, Quote,
-  ClipboardList, Mail, MessagesSquare,
+  ClipboardList, Mail, MessagesSquare, FileText,
 } from "lucide-react";
 import Seal from "@/components/ui/Seal";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, ready: true },
+  { href: "/admin/paginas", label: "Páginas", icon: FileText, ready: true, section: "paginas" },
   { href: "/admin/carta", label: "Carta", icon: UtensilsCrossed, ready: true, section: "carta" },
   { href: "/admin/blog", label: "Blog", icon: Newspaper, ready: true, section: "blog" },
   { href: "/admin/eventos", label: "Eventos", icon: CalendarDays, ready: true, section: "eventos" },

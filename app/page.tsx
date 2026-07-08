@@ -10,73 +10,58 @@ import Stars from "@/components/ui/Stars";
 import EventCard from "@/components/events/EventCard";
 import Testimonials from "@/components/testimonials/Testimonials";
 import { getUpcomingEvents, getEvents, getFeaturedDishes, getGallery, getTestimonials, getFeaturedExperience } from "@/lib/api";
+import { getPageContent, HOME_HERO_DEFAULT, HOME_ABOUT_DEFAULT } from "@/lib/content";
 
 export default async function HomePage() {
-  const [events, upcoming, dishes, gallery, testimonials, feature] = await Promise.all([
+  const [events, upcoming, dishes, gallery, testimonials, feature, hero, about] = await Promise.all([
     getEvents(),
     getUpcomingEvents(),
     getFeaturedDishes(),
     getGallery(),
     getTestimonials(),
     getFeaturedExperience(),
+    getPageContent("home_hero", HOME_HERO_DEFAULT),
+    getPageContent("home_about", HOME_ABOUT_DEFAULT),
   ]);
 
   const eventPreview = (upcoming.length ? upcoming : events).slice(0, 3);
 
   return (
     <>
-      <Hero />
+      <Hero content={hero} />
       <Marquee />
 
       {/* NOSOTROS (preview) */}
       <section className="bg-paper py-[130px] text-ink">
         <div className="wrap grid items-center gap-14 lg:grid-cols-[1.05fr_1fr] lg:gap-20">
           <Reveal>
-            <span className="kicker mb-5 block">私たち · Nuestra historia</span>
+            <span className="kicker mb-5 block">{about.kicker}</span>
             <h2 className="display text-[clamp(2.2rem,4vw,3.4rem)] text-ink">
-              Dos culturas,
-              <br />
-              una <span className="text-seal">misma barra.</span>
+              {about.title} <span className="text-seal">{about.highlight}</span>
             </h2>
-            <p className="mt-7 max-w-[520px] text-[1.08rem] text-neutral-600">
-              Doko nació de una obsesión: honrar la técnica milimétrica de la cocina japonesa sin renunciar al fuego, la
-              acidez y el color del Perú.
-            </p>
-            <p className="mt-5 max-w-[520px] text-[0.98rem] text-neutral-500">
-              Cada plato que sale de nuestra barra es una conversación entre el itamae y el mercado limeño. No servimos
-              fusión: servimos memoria.
-            </p>
+            <p className="mt-7 max-w-[520px] text-[1.08rem] text-neutral-600">{about.paragraph1}</p>
+            <p className="mt-5 max-w-[520px] text-[0.98rem] text-neutral-500">{about.paragraph2}</p>
             <Link
               href="/nosotros"
               className="group mt-8 inline-flex items-center gap-2 border-b border-ink pb-1 text-[0.85rem] tracking-wide text-ink"
             >
-              Conoce nuestra historia
+              {about.ctaLabel}
               <ArrowRight size={15} className="transition-transform duration-500 ease-premium group-hover:translate-x-1" />
             </Link>
           </Reveal>
 
           <Reveal delay={0.1} className="relative">
             <div className="relative aspect-[4/5] overflow-hidden rounded shadow-[0_40px_90px_-30px_rgba(0,0,0,0.4)]">
-              <Image
-                src="https://images.unsplash.com/photo-1581299894007-aaa50297cf16?w=1000&q=80&auto=format&fit=crop"
-                alt="Chef en la barra"
-                fill
-                sizes="(max-width: 1024px) 100vw, 40vw"
-                className="object-cover"
-              />
+              {about.image1 && (
+                <Image src={about.image1} alt="" fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-cover" />
+              )}
             </div>
             <div className="absolute -bottom-10 left-0 aspect-square w-[44%] overflow-hidden rounded border-[6px] border-paper shadow-[0_30px_60px_-20px_rgba(0,0,0,0.45)] lg:-left-11">
-              <Image
-                src="https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=700&q=80&auto=format&fit=crop"
-                alt="Nigiri"
-                fill
-                sizes="200px"
-                className="object-cover"
-              />
+              {about.image2 && <Image src={about.image2} alt="" fill sizes="200px" className="object-cover" />}
             </div>
             <div className="absolute -right-4 top-6 rounded bg-ink px-5 py-3.5 text-white shadow-[0_20px_40px_-12px_rgba(0,0,0,0.5)]">
-              <div className="font-display text-[1.05rem] font-semibold">Kenyo Oyakawa</div>
-              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.2em] text-seal">Chef · Itamae</div>
+              <div className="font-display text-[1.05rem] font-semibold">{about.chefName}</div>
+              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.2em] text-seal">{about.chefRole}</div>
             </div>
           </Reveal>
         </div>

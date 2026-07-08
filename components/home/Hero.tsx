@@ -4,21 +4,16 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HOME_HERO_DEFAULT, type HomeHero } from "@/lib/content";
 
-const SLIDES = [
-  { img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1800&q=80&auto=format&fit=crop", cap: "Omakase — Barra principal" },
-  { img: "https://images.unsplash.com/photo-1553621042-f6e147245754?w=1800&q=80&auto=format&fit=crop", cap: "Nikkei — Tiradito de la casa" },
-  { img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1800&q=80&auto=format&fit=crop", cap: "El salón — Luz de noche" },
-  { img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=1800&q=80&auto=format&fit=crop", cap: "Barra de coctelería japonesa" },
-];
-
-export default function Hero() {
+export default function Hero({ content = HOME_HERO_DEFAULT }: { content?: HomeHero }) {
   const [i, setI] = useState(0);
+  const SLIDES = content.slides.length ? content.slides : HOME_HERO_DEFAULT.slides;
 
   useEffect(() => {
     const t = setInterval(() => setI((n) => (n + 1) % SLIDES.length), 5500);
     return () => clearInterval(t);
-  }, []);
+  }, [SLIDES.length]);
 
   return (
     <section className="relative flex h-screen min-h-[640px] items-end overflow-hidden">
@@ -39,17 +34,13 @@ export default function Hero() {
           <div className="max-w-[760px]">
             <div className="mb-6 flex items-center gap-4">
               <span className="h-px w-[52px] bg-seal" />
-              <span className="kicker">Nikkei · Lima</span>
+              <span className="kicker">{content.kicker}</span>
             </div>
             <h1 className="font-display text-[clamp(2.9rem,7vw,6rem)] font-semibold leading-[0.99] tracking-[-0.015em] text-white">
-              La experiencia
-              <br />
-              Nikkei que
-              <br />
-              <span className="text-seal">recordarás.</span>
+              {content.headline} <span className="text-seal">{content.highlight}</span>
             </h1>
             <p className="mt-6 max-w-[440px] font-light text-[1.06rem] text-mist">
-              Donde el rigor japonés y el alma peruana se encuentran a fuego lento. Una mesa, una noche, una comunidad.
+              {content.subtitle}
             </p>
             <div className="mt-9 flex flex-wrap gap-4">
               <Link href="/reservar" className="btn btn-solid !px-8 !py-[15px] !text-[0.86rem]">

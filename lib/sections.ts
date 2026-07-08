@@ -10,6 +10,7 @@ export const SECTIONS = [
   { key: "testimonios", label: "Testimonios" },
   { key: "reservas", label: "Reservas" },
   { key: "mensajes", label: "Mensajes" },
+  { key: "paginas", label: "Páginas" },
 ] as const;
 
 export type SectionKey = (typeof SECTIONS)[number]["key"];
