@@ -6,23 +6,15 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Seal from "@/components/ui/Seal";
 import UserMenu from "@/components/layout/UserMenu";
+import { PUBLIC_NAV } from "@/lib/public-nav";
 import { cn } from "@/lib/utils";
 
-const LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/nosotros", label: "Nosotros" },
-  { href: "/eventos", label: "Eventos" },
-  { href: "/carta", label: "Carta" },
-  { href: "/galeria", label: "Galería" },
-  { href: "/experiencias", label: "Experiencias" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contacto", label: "Contacto" },
-];
-
-export default function Navbar() {
+export default function Navbar({ hidden = [] }: { hidden?: string[] }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  const LINKS = PUBLIC_NAV.filter((l) => !hidden.includes(l.href));
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);

@@ -43,10 +43,13 @@ create table if not exists public.site_settings (
   instagram   text not null default '',
   facebook    text not null default '',
   hours       text not null default '',
+  nav_hidden  jsonb not null default '[]'::jsonb,
   updated_at  timestamptz not null default now(),
   constraint site_settings_singleton check (id = 1)
 );
 insert into public.site_settings (id) values (1) on conflict (id) do nothing;
+-- Por si la tabla ya existía sin la columna:
+alter table public.site_settings add column if not exists nav_hidden jsonb not null default '[]'::jsonb;
 
 -- 4) RLS
 alter table public.reservations     enable row level security;

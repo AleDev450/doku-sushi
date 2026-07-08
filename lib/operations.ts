@@ -149,6 +149,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   instagram: "",
   facebook: "",
   hours: "",
+  navHidden: [],
 };
 
 function rowToSettings(r: any): SiteSettings {
@@ -162,6 +163,7 @@ function rowToSettings(r: any): SiteSettings {
     instagram: r.instagram ?? "",
     facebook: r.facebook ?? "",
     hours: r.hours ?? "",
+    navHidden: Array.isArray(r.nav_hidden) ? r.nav_hidden : [],
   };
 }
 
@@ -186,6 +188,7 @@ export async function updateSettings(input: SiteSettings): Promise<SiteSettings>
       instagram: input.instagram,
       facebook: input.facebook,
       hours: input.hours,
+      nav_hidden: input.navHidden,
       updated_at: new Date().toISOString(),
     })
     .eq("id", 1)

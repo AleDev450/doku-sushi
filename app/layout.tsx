@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { LightboxProvider } from "@/components/ui/Lightbox";
+import { getSettings } from "@/lib/operations";
 
 const display = Shippori_Mincho({
   subsets: ["latin"],
@@ -38,12 +39,13 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.svg" },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const settings = await getSettings();
   return (
     <html lang="es" className={`${display.variable} ${body.variable}`}>
       <body>
         <LightboxProvider>
-          <Navbar />
+          <Navbar hidden={settings.navHidden} />
           <main>{children}</main>
           <Footer />
         </LightboxProvider>

@@ -151,6 +151,8 @@ export interface SiteSettings {
   instagram: string;
   facebook: string;
   hours: string;
+  /** hrefs del navbar público que están ocultos. */
+  navHidden: string[];
 }
 
 /* ------------------------------- Blog ------------------------------- */

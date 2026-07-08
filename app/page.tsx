@@ -75,7 +75,7 @@ export default async function HomePage() {
               />
             </div>
             <div className="absolute -right-4 top-6 rounded bg-ink px-5 py-3.5 text-white shadow-[0_20px_40px_-12px_rgba(0,0,0,0.5)]">
-              <div className="font-display text-[1.05rem] font-semibold">Kenji Nakamura</div>
+              <div className="font-display text-[1.05rem] font-semibold">Kenyo Oyakawa</div>
               <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.2em] text-seal">Chef · Itamae</div>
             </div>
           </Reveal>

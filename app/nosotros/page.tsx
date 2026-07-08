@@ -76,7 +76,7 @@ export default function NosotrosPage() {
           <Reveal className="relative aspect-[4/5] overflow-hidden rounded-lg lg:aspect-auto lg:h-[560px]">
             <Image
               src="https://images.unsplash.com/photo-1581299894007-aaa50297cf16?w=1000&q=80&auto=format&fit=crop"
-              alt="Chef Kenji Nakamura"
+              alt="Chef Kenyo Oyakawa"
               fill
               sizes="(max-width:1024px) 100vw, 50vw"
               className="object-cover"
@@ -84,7 +84,7 @@ export default function NosotrosPage() {
           </Reveal>
           <Reveal delay={0.1}>
             <span className="kicker mb-5 block">El chef</span>
-            <h2 className="display text-[clamp(2rem,4vw,3rem)] text-white">Kenji Nakamura</h2>
+            <h2 className="display text-[clamp(2rem,4vw,3rem)] text-white">Kenyo Oyakawa</h2>
             <p className="mt-2 text-[0.9rem] uppercase tracking-[0.14em] text-seal">Chef · Itamae</p>
             <p className="mt-6 text-[1.05rem] leading-relaxed text-mist">
               Formado en Tokio y curtido en las cevicherías de Lima, Kenji entiende la barra como un escenario. Su

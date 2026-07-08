@@ -1,9 +1,8 @@
 // Helpers de sesión/rol para el servidor (Server Components, layouts, actions).
-// Lee el profile vía service_role para evitar fricción con RLS.
+// Lee el propio perfil con la sesión del usuario (RLS), sin service_role.
 
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export type Role = "superadmin" | "editor" | "user";
 export type StaffRole = "superadmin" | "editor";
@@ -19,19 +18,26 @@ export type Profile = {
 
 /** Perfil del usuario logueado, o null si no hay sesión / no tiene profile. */
 export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  const { data } = await createAdminClient()
-    .from("profiles")
-    .select("id, email, full_name, avatar_url, role, active")
-    .eq("id", user.id)
-    .maybeSingle();
+    // Lee el propio perfil con la sesión (RLS "read own profile" lo permite).
+    // No depende de la service_role, así funciona aunque falte esa env var.
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, email, full_name, avatar_url, role, active")
+      .eq("id", user.id)
+      .maybeSingle();
 
-  return (data as Profile) ?? null;
+    return (data as Profile) ?? null;
+  } catch {
+    // Nunca reventar por un fallo de sesión/entorno: se trata como "no logueado".
+    return null;
+  }
 });
 
 /** True si el profile es STAFF (superadmin/editor) activo → puede entrar al /admin. */

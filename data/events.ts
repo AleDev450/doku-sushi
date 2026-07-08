@@ -36,7 +36,7 @@ export const events: EventDetail[] = [
       { time: "22:30", title: "Cierre dulce", detail: "Postre nikkei y sobremesa." },
     ],
     guestChef: {
-      name: "Kenji Nakamura",
+      name: "Kenyo Oyakawa",
       role: "Chef · Itamae",
       photo: "https://images.unsplash.com/photo-1581299894007-aaa50297cf16?w=800&q=80&auto=format&fit=crop",
       bio: "Formado en Tokio y curtido en las cevicherías de Lima. Su cocina es una conversación entre dos mundos.",

@@ -31,6 +31,7 @@ export async function PUT(req: Request) {
     instagram: s("instagram"),
     facebook: s("facebook"),
     hours: s("hours"),
+    navHidden: Array.isArray(b.navHidden) ? b.navHidden.filter((x): x is string => typeof x === "string") : [],
   };
   try {
     const settings = await updateSettings(input);
