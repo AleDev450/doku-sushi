@@ -5,7 +5,10 @@ import { revalidatePath } from "next/cache";
 import { setPageContent } from "@/lib/content";
 import { requirePermission } from "@/lib/rbac";
 
-const ALLOWED = new Set(["home_hero", "home_about"]);
+const ALLOWED = new Set([
+  "home_hero", "home_about", "home_sections", "home_reserva", "home_marquee",
+  "page_headers", "about_page",
+]);
 
 export async function PUT(req: Request, { params }: { params: { key: string } }) {
   if (!(await requirePermission("paginas", "edit"))) {

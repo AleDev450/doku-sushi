@@ -10,10 +10,13 @@ import Stars from "@/components/ui/Stars";
 import EventCard from "@/components/events/EventCard";
 import Testimonials from "@/components/testimonials/Testimonials";
 import { getUpcomingEvents, getEvents, getFeaturedDishes, getGallery, getTestimonials, getFeaturedExperience } from "@/lib/api";
-import { getPageContent, HOME_HERO_DEFAULT, HOME_ABOUT_DEFAULT } from "@/lib/content";
+import {
+  getPageContent, HOME_HERO_DEFAULT, HOME_ABOUT_DEFAULT,
+  HOME_SECTIONS_DEFAULT, HOME_RESERVA_DEFAULT, HOME_MARQUEE_DEFAULT,
+} from "@/lib/content";
 
 export default async function HomePage() {
-  const [events, upcoming, dishes, gallery, testimonials, feature, hero, about] = await Promise.all([
+  const [events, upcoming, dishes, gallery, testimonials, feature, hero, about, sections, reserva, marquee] = await Promise.all([
     getEvents(),
     getUpcomingEvents(),
     getFeaturedDishes(),
@@ -22,6 +25,9 @@ export default async function HomePage() {
     getFeaturedExperience(),
     getPageContent("home_hero", HOME_HERO_DEFAULT),
     getPageContent("home_about", HOME_ABOUT_DEFAULT),
+    getPageContent("home_sections", HOME_SECTIONS_DEFAULT),
+    getPageContent("home_reserva", HOME_RESERVA_DEFAULT),
+    getPageContent("home_marquee", HOME_MARQUEE_DEFAULT),
   ]);
 
   const eventPreview = (upcoming.length ? upcoming : events).slice(0, 3);
@@ -29,7 +35,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero content={hero} />
-      <Marquee />
+      <Marquee text={marquee.text} />
 
       {/* NOSOTROS (preview) */}
       <section className="bg-paper py-[130px] text-ink">
@@ -71,9 +77,9 @@ export default async function HomePage() {
       <section className="bg-ink py-[128px]">
         <div className="wrap">
           <SectionHeader
-            kicker="催し · Agenda"
-            title={<>Próximos <span className="text-seal">eventos.</span></>}
-            subtitle="Noches temáticas, chefs invitados y menús que solo existen una vez. Reserva antes de que se agoten."
+            kicker={sections.eventos.kicker}
+            title={<>{sections.eventos.title} <span className="text-seal">{sections.eventos.highlight}</span></>}
+            subtitle={sections.eventos.subtitle}
             link={{ href: "/eventos", label: "Ver toda la agenda" }}
           />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -91,9 +97,9 @@ export default async function HomePage() {
         <section className="border-t border-[var(--line)] bg-[linear-gradient(180deg,#0E0E0E_0%,#0a0a0a_100%)] py-[128px]">
           <div className="wrap">
             <SectionHeader
-              kicker="思い出 · Álbum digital"
-              title={<>Revive cada <span className="text-seal">experiencia.</span></>}
-              subtitle="Cuando la noche termina, el evento no muere: se convierte en un álbum vivo de fotos, videos y voces."
+              kicker={sections.experiencias.kicker}
+              title={<>{sections.experiencias.title} <span className="text-seal">{sections.experiencias.highlight}</span></>}
+              subtitle={sections.experiencias.subtitle}
               link={{ href: "/experiencias", label: "Todas las experiencias" }}
             />
             <Reveal className="grid overflow-hidden rounded-lg border border-[var(--line)] bg-ink-2 lg:grid-cols-[1.3fr_1fr]">
@@ -139,8 +145,8 @@ export default async function HomePage() {
       <section className="bg-paper py-[130px] text-ink">
         <div className="wrap">
           <SectionHeader
-            kicker="お品書き · La carta"
-            title={<>Platos <span className="text-seal">destacados.</span></>}
+            kicker={sections.carta.kicker}
+            title={<>{sections.carta.title} <span className="text-seal">{sections.carta.highlight}</span></>}
             center
             dark={false}
           />
@@ -176,9 +182,9 @@ export default async function HomePage() {
       <section className="border-t border-[var(--line)] bg-ink py-[128px]">
         <div className="wrap">
           <SectionHeader
-            kicker="写真 · Galería"
-            title={<>El lente de <span className="text-seal">Doko.</span></>}
-            subtitle="Comida, gente y noches. Una ventana sin filtros a lo que se vive dentro."
+            kicker={sections.galeria.kicker}
+            title={<>{sections.galeria.title} <span className="text-seal">{sections.galeria.highlight}</span></>}
+            subtitle={sections.galeria.subtitle}
             link={{ href: "/galeria", label: "Ver galería completa" }}
           />
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -195,8 +201,8 @@ export default async function HomePage() {
       <section className="overflow-hidden bg-paper-soft py-[130px]">
         <div className="wrap">
           <SectionHeader
-            kicker="お客様の声 · Testimonios"
-            title={<>Lo que dicen <span className="text-seal">de nosotros.</span></>}
+            kicker={sections.testimonios.kicker}
+            title={<>{sections.testimonios.title} <span className="text-seal">{sections.testimonios.highlight}</span></>}
             center
             dark={false}
           />
@@ -204,7 +210,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <ReservaCTA />
+      <ReservaCTA content={reserva} />
     </>
   );
 }

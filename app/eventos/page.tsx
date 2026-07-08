@@ -4,6 +4,7 @@ import EventCard from "@/components/events/EventCard";
 import Reveal from "@/components/ui/Reveal";
 import ReservaCTA from "@/components/home/ReservaCTA";
 import { getEvents } from "@/lib/api";
+import { getPageContent, PAGE_HEADERS_DEFAULT, HOME_RESERVA_DEFAULT } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Eventos",
@@ -11,16 +12,21 @@ export const metadata: Metadata = {
 };
 
 export default async function EventosPage() {
-  const events = await getEvents();
+  const [events, headers, reserva] = await Promise.all([
+    getEvents(),
+    getPageContent("page_headers", PAGE_HEADERS_DEFAULT),
+    getPageContent("home_reserva", HOME_RESERVA_DEFAULT),
+  ]);
   const upcoming = events.filter((e) => e.status === "upcoming");
   const past = events.filter((e) => e.status === "past");
+  const h = headers.eventos;
 
   return (
     <>
       <PageHeader
-        kicker="催し · Agenda"
-        title={<>Nuestros <span className="text-seal">eventos.</span></>}
-        subtitle="Noches temáticas, chefs invitados y menús irrepetibles. Reserva tu lugar o revive los que ya pasaron."
+        kicker={h.kicker}
+        title={<>{h.title} <span className="text-seal">{h.highlight}</span></>}
+        subtitle={h.subtitle}
       />
 
       <section className="bg-ink py-20">
@@ -53,7 +59,7 @@ export default async function EventosPage() {
         </div>
       </section>
 
-      <ReservaCTA />
+      <ReservaCTA content={reserva} />
     </>
   );
 }

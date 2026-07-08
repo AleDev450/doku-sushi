@@ -1,6 +1,7 @@
-const ITEMS = "おまかせ Omakase ◈ Tiradito ◈ Nigiri de la barra ◈ Sake & Pisco ◈ Robata ◈ 日本 × Perú ◈ ";
+import { HOME_MARQUEE_DEFAULT } from "@/lib/content";
 
-export default function Marquee() {
+export default function Marquee({ text = HOME_MARQUEE_DEFAULT.text }: { text?: string }) {
+  const ITEMS = text || HOME_MARQUEE_DEFAULT.text;
   return (
     <div className="overflow-hidden border-y border-[var(--line)] bg-ink py-[18px]" aria-hidden>
       <div className="flex w-max animate-marquee whitespace-nowrap">

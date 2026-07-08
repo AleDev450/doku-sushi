@@ -6,6 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Reveal from "@/components/ui/Reveal";
 import Stars from "@/components/ui/Stars";
 import { getExperiences } from "@/lib/api";
+import { getPageContent, PAGE_HEADERS_DEFAULT } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Experiencias",
@@ -13,14 +14,15 @@ export const metadata: Metadata = {
 };
 
 export default async function ExperienciasPage() {
-  const experiences = await getExperiences();
+  const [experiences, headers] = await Promise.all([getExperiences(), getPageContent("page_headers", PAGE_HEADERS_DEFAULT)]);
+  const h = headers.experiencias;
 
   return (
     <>
       <PageHeader
-        kicker="思い出 · Álbum digital"
-        title={<>Revive cada <span className="text-seal">experiencia.</span></>}
-        subtitle="Cuando la noche termina, el evento no muere. Se convierte en un álbum de fotos, videos y voces de quienes estuvieron ahí."
+        kicker={h.kicker}
+        title={<>{h.title} <span className="text-seal">{h.highlight}</span></>}
+        subtitle={h.subtitle}
       />
 
       <section className="bg-ink py-[80px]">
