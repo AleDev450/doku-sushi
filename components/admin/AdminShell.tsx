@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, CalendarDays, UtensilsCrossed, Images,
-  MessageSquare, Users, Settings, LogOut, Menu, X, Bell, Search, Newspaper,
+  MessageSquare, Users, Settings, LogOut, Menu, X, Bell, Search, Newspaper, Quote,
+  ClipboardList, Mail, MessagesSquare,
 } from "lucide-react";
 import Seal from "@/components/ui/Seal";
 import { cn } from "@/lib/utils";
@@ -29,8 +30,12 @@ const NAV: NavItem[] = [
   { href: "/admin/eventos", label: "Eventos", icon: CalendarDays, ready: true, section: "eventos" },
   { href: "/admin/galeria", label: "Galería", icon: Images, ready: true, section: "galeria" },
   { href: "/admin/experiencias", label: "Experiencias", icon: MessageSquare, ready: true, section: "experiencias" },
+  { href: "/admin/testimonios", label: "Testimonios", icon: Quote, ready: true, section: "testimonios" },
+  { href: "/admin/reservas", label: "Reservas", icon: ClipboardList, ready: true, section: "reservas" },
+  { href: "/admin/mensajes", label: "Mensajes", icon: Mail, ready: true, section: "mensajes" },
+  { href: "/admin/comentarios", label: "Comentarios", icon: MessagesSquare, ready: true },
   { href: "/admin/usuarios", label: "Usuarios", icon: Users, ready: true, superadminOnly: true },
-  { href: "/admin/ajustes", label: "Ajustes", icon: Settings, ready: false, superadminOnly: true },
+  { href: "/admin/ajustes", label: "Ajustes", icon: Settings, ready: true, superadminOnly: true },
 ];
 
 function isActive(pathname: string, href: string): boolean {

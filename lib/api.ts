@@ -434,6 +434,68 @@ export async function getTestimonials(): Promise<Testimonial[]> {
   return readTable<Testimonial>("testimonials");
 }
 
+export type TestimonialInput = Omit<Testimonial, "id">;
+
+function testimonialToRow(t: Partial<TestimonialInput>): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+  if (t.name !== undefined) row.name = t.name;
+  if (t.role !== undefined) row.role = t.role;
+  if (t.avatar !== undefined) row.avatar = t.avatar;
+  if (t.rating !== undefined) row.rating = t.rating;
+  if (t.quote !== undefined) row.quote = t.quote;
+  return row;
+}
+
+export async function getTestimonialById(id: number): Promise<Testimonial | null> {
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient().from("testimonials").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? rowToTestimonial(data) : null;
+  }
+  return (await readTable<Testimonial>("testimonials")).find((t) => t.id === id) ?? null;
+}
+
+export async function createTestimonial(input: TestimonialInput): Promise<Testimonial> {
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient().from("testimonials").insert(testimonialToRow(input)).select().single();
+    if (error) throw error;
+    return rowToTestimonial(data);
+  }
+  const rows = await readTable<Testimonial>("testimonials");
+  const t: Testimonial = { id: nextId(rows), ...input };
+  rows.push(t);
+  await writeTable("testimonials", rows);
+  return t;
+}
+
+export async function updateTestimonial(id: number, patch: Partial<TestimonialInput>): Promise<Testimonial | null> {
+  if (supabaseEnabled()) {
+    const { data, error } = await createAdminClient().from("testimonials").update(testimonialToRow(patch)).eq("id", id).select().maybeSingle();
+    if (error) throw error;
+    return data ? rowToTestimonial(data) : null;
+  }
+  const rows = await readTable<Testimonial>("testimonials");
+  const i = rows.findIndex((t) => t.id === id);
+  if (i === -1) return null;
+  rows[i] = { ...rows[i], ...patch };
+  await writeTable("testimonials", rows);
+  return rows[i];
+}
+
+export async function deleteTestimonial(id: number): Promise<boolean> {
+  if (supabaseEnabled()) {
+    const { error, count } = await createAdminClient().from("testimonials").delete({ count: "exact" }).eq("id", id);
+    if (error) throw error;
+    return (count ?? 0) > 0;
+  }
+  const rows = await readTable<Testimonial>("testimonials");
+  const i = rows.findIndex((t) => t.id === id);
+  if (i === -1) return false;
+  rows.splice(i, 1);
+  await writeTable("testimonials", rows);
+  return true;
+}
+
 /* --------------------------- Experiencias -------------------------- */
 
 export async function getExperiences(): Promise<ExperienceSummary[]> {

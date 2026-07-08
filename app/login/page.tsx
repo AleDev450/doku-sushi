@@ -44,6 +44,20 @@ function LoginForm() {
     if (err) setError(err.message);
   }
 
+  async function forgot() {
+    setError(null);
+    setInfo(null);
+    if (!email) {
+      setError("Escribe tu correo y vuelve a intentar.");
+      return;
+    }
+    const { error: err } = await createClient().auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset`,
+    });
+    if (err) setError(err.message);
+    else setInfo("Te enviamos un enlace para restablecer tu contraseña. Revisa tu correo.");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -142,6 +156,12 @@ function LoginForm() {
               <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-mist-2" />
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={8} className="field-input !pl-11" />
             </div>
+
+            {mode === "login" && (
+              <div className="text-right">
+                <button type="button" onClick={forgot} className="text-[0.78rem] text-mist-2 hover:text-white">¿Olvidaste tu contraseña?</button>
+              </div>
+            )}
 
             {error && <p className="rounded-md border border-seal/40 bg-seal/10 px-3 py-2.5 text-[0.82rem] text-seal">{error}</p>}
             {info && <p className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2.5 text-[0.82rem] text-emerald-400">{info}</p>}

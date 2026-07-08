@@ -1,133 +1,107 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
-  CalendarDays, Users, Star, DollarSign, TrendingUp, MessageSquare, ArrowUpRight,
+  CalendarDays, Mail, Users, MessageSquare, UtensilsCrossed, Ticket, ArrowUpRight,
 } from "lucide-react";
-import { ReservasChart, VentasChart } from "@/components/admin/DashboardCharts";
+import { tableCount, listReservations } from "@/lib/operations";
+import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Dashboard Admin",
-  robots: { index: false },
+export const metadata: Metadata = { title: "Dashboard · Admin", robots: { index: false } };
+export const dynamic = "force-dynamic";
+
+const STATUS_CLS: Record<string, string> = {
+  pending: "bg-amber-500/10 text-amber-400",
+  confirmed: "bg-emerald-500/10 text-emerald-400",
+  cancelled: "bg-seal/10 text-seal",
 };
+const STATUS_LABEL: Record<string, string> = { pending: "Pendiente", confirmed: "Confirmada", cancelled: "Cancelada" };
 
-const stats = [
-  { label: "Reservas del mes", value: "468", delta: "+14%", icon: CalendarDays },
-  { label: "Usuarios activos", value: "2,340", delta: "+8%", icon: Users },
-  { label: "Rating promedio", value: "4.9", delta: "+0.2", icon: Star },
-  { label: "Ventas (mes)", value: "S/ 92.4k", delta: "+21%", icon: DollarSign },
-  { label: "Nuevas reseñas", value: "96", delta: "+31%", icon: MessageSquare },
-  { label: "Tasa ocupación", value: "87%", delta: "+5%", icon: TrendingUp },
-];
+export default async function AdminDashboard() {
+  const [
+    reservas, pendientes, mensajes, sinLeer, comunidad, feedback, platos, eventos,
+  ] = await Promise.all([
+    tableCount("reservations"),
+    tableCount("reservations", (q) => q.eq("status", "pending")),
+    tableCount("contact_messages"),
+    tableCount("contact_messages", (q) => q.eq("read", false)),
+    tableCount("profiles", (q) => q.eq("role", "user")),
+    tableCount("feedback"),
+    tableCount("dishes"),
+    tableCount("events"),
+  ]);
 
-const reservasRecientes = [
-  { name: "Camila Rivas", people: 4, date: "18 Jul · 20:00", event: "Omakase a Ciegas", status: "Confirmada" },
-  { name: "Diego Salazar", people: 2, date: "18 Jul · 20:30", event: "Omakase a Ciegas", status: "Confirmada" },
-  { name: "Valeria Chang", people: 6, date: "26 Jul · 21:00", event: "Robata & Pisco", status: "Pendiente" },
-  { name: "Jorge Medina", people: 2, date: "26 Jul · 21:00", event: "Robata & Pisco", status: "Confirmada" },
-  { name: "Rosa Núñez", people: 3, date: "27 Jul · 20:00", event: "Reserva general", status: "Pendiente" },
-];
+  let recientes: Awaited<ReturnType<typeof listReservations>> = [];
+  try {
+    recientes = (await listReservations()).slice(0, 6);
+  } catch {
+    /* tabla aún no creada */
+  }
 
-const topDishes = [
-  { name: "Maki Acevichado", orders: 142, pct: 92 },
-  { name: "Nigiri de Toro", orders: 118, pct: 76 },
-  { name: "Robata de Pulpo", orders: 97, pct: 63 },
-  { name: "Tiradito Doko", orders: 84, pct: 54 },
-];
+  const cards = [
+    { label: "Reservas", value: reservas, sub: `${pendientes} pendientes`, icon: CalendarDays, href: "/admin/reservas" },
+    { label: "Mensajes", value: mensajes, sub: `${sinLeer} sin leer`, icon: Mail, href: "/admin/mensajes" },
+    { label: "Comunidad", value: comunidad, sub: "usuarios", icon: Users, href: "/admin/usuarios" },
+    { label: "Feedback", value: feedback, sub: "comentarios", icon: MessageSquare, href: "/admin/comentarios" },
+    { label: "Platos", value: platos, sub: "en la carta", icon: UtensilsCrossed, href: "/admin/carta" },
+    { label: "Eventos", value: eventos, sub: "en agenda", icon: Ticket, href: "/admin/eventos" },
+  ];
 
-export default function AdminDashboard() {
   return (
     <div className="space-y-7">
       <div>
         <h1 className="font-display text-[1.9rem] font-semibold">Dashboard</h1>
-        <p className="text-[0.9rem] text-mist">Resumen general de Doko · Julio 2026</p>
+        <p className="text-[0.9rem] text-mist">Resumen general de Doko · datos en vivo</p>
       </div>
 
-      {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-[var(--line)] bg-ink p-5">
+        {cards.map((c) => (
+          <Link key={c.label} href={c.href} className="group rounded-xl border border-[var(--line)] bg-ink p-5 transition-colors hover:border-white/20">
             <div className="mb-4 flex items-center justify-between">
-              <span className="grid h-10 w-10 place-items-center rounded-lg bg-seal/12 text-seal"><s.icon size={19} /></span>
-              <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[0.72rem] font-medium text-emerald-400">
-                <ArrowUpRight size={12} /> {s.delta}
-              </span>
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-seal/12 text-seal"><c.icon size={19} /></span>
+              <ArrowUpRight size={16} className="text-mist-2 transition-colors group-hover:text-white" />
             </div>
-            <div className="font-display text-[2rem] font-bold leading-none">{s.value}</div>
-            <div className="mt-1.5 text-[0.82rem] text-mist">{s.label}</div>
-          </div>
+            <div className="font-display text-[2rem] font-bold leading-none">{c.value}</div>
+            <div className="mt-1.5 text-[0.82rem] text-mist">{c.label} <span className="text-mist-2">· {c.sub}</span></div>
+          </Link>
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-[var(--line)] bg-ink p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-display text-[1.15rem] font-semibold">Reservas por mes</h3>
-            <span className="text-[0.76rem] text-mist">Últimos 7 meses</span>
-          </div>
-          <ReservasChart />
+      <div className="rounded-xl border border-[var(--line)] bg-ink p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-display text-[1.15rem] font-semibold">Reservas recientes</h3>
+          <Link href="/admin/reservas" className="text-[0.78rem] text-mist hover:text-white">Ver todas</Link>
         </div>
-        <div className="rounded-xl border border-[var(--line)] bg-ink p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-display text-[1.15rem] font-semibold">Ventas por categoría</h3>
-            <span className="text-[0.76rem] text-mist">% del total</span>
-          </div>
-          <VentasChart />
-        </div>
-      </div>
-
-      {/* Tablas */}
-      <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        {/* Reservas recientes */}
-        <div className="rounded-xl border border-[var(--line)] bg-ink p-5">
-          <h3 className="mb-4 font-display text-[1.15rem] font-semibold">Reservas recientes</h3>
+        {recientes.length === 0 ? (
+          <p className="py-6 text-center text-[0.85rem] text-mist-2">Aún no hay reservas.</p>
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[0.85rem]">
               <thead>
                 <tr className="border-b border-[var(--line)] text-[0.72rem] uppercase tracking-wider text-mist-2">
                   <th className="pb-3 pr-4 font-medium">Cliente</th>
-                  <th className="pb-3 pr-4 font-medium">Pers.</th>
                   <th className="pb-3 pr-4 font-medium">Fecha</th>
+                  <th className="pb-3 pr-4 font-medium">Pers.</th>
                   <th className="pb-3 font-medium">Estado</th>
                 </tr>
               </thead>
               <tbody>
-                {reservasRecientes.map((r) => (
-                  <tr key={r.name} className="border-b border-[var(--line)] last:border-none">
+                {recientes.map((r) => (
+                  <tr key={r.id} className="border-b border-[var(--line)] last:border-none">
                     <td className="py-3 pr-4">
                       <div className="font-medium">{r.name}</div>
-                      <div className="text-[0.74rem] text-mist-2">{r.event}</div>
+                      <div className="text-[0.74rem] text-mist-2">{r.email}</div>
                     </td>
+                    <td className="py-3 pr-4 text-mist">{r.date}{r.time ? ` · ${r.time}` : ""}</td>
                     <td className="py-3 pr-4 text-mist">{r.people}</td>
-                    <td className="py-3 pr-4 text-mist">{r.date}</td>
                     <td className="py-3">
-                      <span className={`rounded-full px-2.5 py-1 text-[0.7rem] font-medium ${r.status === "Confirmada" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>
-                        {r.status}
-                      </span>
+                      <span className={cn("rounded-full px-2.5 py-1 text-[0.7rem] font-medium", STATUS_CLS[r.status])}>{STATUS_LABEL[r.status]}</span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Top platos */}
-        <div className="rounded-xl border border-[var(--line)] bg-ink p-5">
-          <h3 className="mb-4 font-display text-[1.15rem] font-semibold">Platos más pedidos</h3>
-          <div className="space-y-4">
-            {topDishes.map((d) => (
-              <div key={d.name}>
-                <div className="mb-1.5 flex items-center justify-between text-[0.85rem]">
-                  <span className="font-medium">{d.name}</span>
-                  <span className="text-mist">{d.orders}</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                  <div className="h-full rounded-full bg-seal" style={{ width: `${d.pct}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

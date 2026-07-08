@@ -86,3 +86,9 @@ create policy "feedback delete own/staff" on public.feedback for delete
 create policy "likes write own" on public.feedback_likes for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- 6) Permisos por defecto para la sección 'testimonios' (idempotente)
+insert into public.role_permissions (role, section, can_view, can_edit) values
+  ('superadmin', 'testimonios', true, true),
+  ('editor',     'testimonios', true, true)
+on conflict (role, section) do nothing;

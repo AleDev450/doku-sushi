@@ -7,6 +7,9 @@ export const SECTIONS = [
   { key: "eventos", label: "Eventos" },
   { key: "galeria", label: "Galería" },
   { key: "experiencias", label: "Experiencias" },
+  { key: "testimonios", label: "Testimonios" },
+  { key: "reservas", label: "Reservas" },
+  { key: "mensajes", label: "Mensajes" },
 ] as const;
 
 export type SectionKey = (typeof SECTIONS)[number]["key"];

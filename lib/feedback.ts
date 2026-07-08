@@ -57,6 +57,54 @@ export async function getFeedback(
   }));
 }
 
+export type FeedbackAdminItem = FeedbackItem & { targetType: FeedbackTarget; targetSlug: string };
+
+/** Todo el feedback (para moderación del staff). */
+export async function listAllFeedback(): Promise<FeedbackAdminItem[]> {
+  const sb = createAdminClient();
+  const { data: rows } = await sb.from("feedback").select("*").order("created_at", { ascending: false });
+  const items = rows ?? [];
+  if (items.length === 0) return [];
+
+  const ids = items.map((r) => r.id);
+  const { data: likes } = await sb.from("feedback_likes").select("feedback_id").in("feedback_id", ids);
+  const count = new Map<number, number>();
+  for (const l of likes ?? []) count.set(l.feedback_id, (count.get(l.feedback_id) ?? 0) + 1);
+
+  return items.map((r) => ({
+    id: r.id,
+    userId: r.user_id,
+    authorName: r.author_name,
+    authorAvatar: r.author_avatar,
+    rating: r.rating,
+    text: r.text,
+    createdAt: r.created_at,
+    likes: count.get(r.id) ?? 0,
+    likedByMe: false,
+    targetType: r.target_type,
+    targetSlug: r.target_slug,
+  }));
+}
+
+/** Feedback de un usuario (para su página de cuenta). */
+export async function getUserFeedback(userId: string): Promise<FeedbackAdminItem[]> {
+  const sb = createAdminClient();
+  const { data } = await sb.from("feedback").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    userId: r.user_id,
+    authorName: r.author_name,
+    authorAvatar: r.author_avatar,
+    rating: r.rating,
+    text: r.text,
+    createdAt: r.created_at,
+    likes: 0,
+    likedByMe: false,
+    targetType: r.target_type,
+    targetSlug: r.target_slug,
+  }));
+}
+
 export async function addFeedback(input: {
   targetType: FeedbackTarget;
   targetSlug: string;

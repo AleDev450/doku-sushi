@@ -109,6 +109,50 @@ export interface ExperienceDetail extends ExperienceSummary {
   story: string;
 }
 
+/* ---------------------------- Reservas ---------------------------- */
+
+export type ReservationStatus = "pending" | "confirmed" | "cancelled";
+
+export interface Reservation {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  /** YYYY-MM-DD */
+  date: string;
+  time: string;
+  people: number;
+  eventSlug: string | null;
+  notes: string;
+  status: ReservationStatus;
+  createdAt: string;
+}
+
+/* -------------------------- Contacto ------------------------------ */
+
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+/* --------------------------- Ajustes ------------------------------ */
+
+export interface SiteSettings {
+  brandName: string;
+  tagline: string;
+  address: string;
+  phone: string;
+  email: string;
+  instagram: string;
+  facebook: string;
+  hours: string;
+}
+
 /* ------------------------------- Blog ------------------------------- */
 
 export type PostStatus = "draft" | "published";

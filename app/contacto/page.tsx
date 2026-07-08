@@ -8,10 +8,28 @@ import Reveal from "@/components/ui/Reveal";
 export default function ContactoPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const submit = () => {
-    if (form.name && form.email.includes("@") && form.message) setSent(true);
-  };
+  async function submit() {
+    if (!(form.name && form.email.includes("@") && form.message)) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudo enviar.");
+      setSent(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al enviar.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <>
@@ -74,7 +92,10 @@ export default function ContactoPage() {
                       <label className="field-label">Mensaje</label>
                       <textarea rows={5} className="field-input resize-none" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="¿En qué te ayudamos?" />
                     </div>
-                    <button onClick={submit} className="btn btn-solid w-full !py-3.5">Enviar mensaje</button>
+                    {error && <p className="rounded-md border border-seal/40 bg-seal/10 px-4 py-2.5 text-[0.82rem] text-seal">{error}</p>}
+                    <button onClick={submit} disabled={submitting} className="btn btn-solid w-full !py-3.5 disabled:opacity-60">
+                      {submitting ? "Enviando…" : "Enviar mensaje"}
+                    </button>
                   </div>
                 </>
               )}

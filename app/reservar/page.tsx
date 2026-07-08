@@ -16,8 +16,38 @@ export default function ReservarPage() {
   const [occasion, setOccasion] = useState("Casual");
   const [contact, setContact] = useState({ name: "", phone: "", email: "" });
   const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const valid = date && contact.name && contact.phone && contact.email.includes("@");
+
+  async function submit() {
+    if (!valid) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          date,
+          time,
+          people,
+          notes: `Ocasión: ${occasion}`,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudo reservar.");
+      setDone(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al reservar.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <>
@@ -116,12 +146,13 @@ export default function ReservarPage() {
                 </div>
               </div>
 
+              {error && <p className="mt-6 rounded-md border border-seal/40 bg-seal/10 px-4 py-3 text-center text-[0.85rem] text-seal">{error}</p>}
               <button
-                onClick={() => valid && setDone(true)}
-                disabled={!valid}
-                className={cn("btn btn-solid mt-8 w-full !py-4", !valid && "cursor-not-allowed opacity-40 hover:!transform-none hover:!shadow-none")}
+                onClick={submit}
+                disabled={!valid || submitting}
+                className={cn("btn btn-solid mt-8 w-full !py-4", (!valid || submitting) && "cursor-not-allowed opacity-40 hover:!transform-none hover:!shadow-none")}
               >
-                Confirmar reserva
+                {submitting ? "Enviando…" : "Confirmar reserva"}
               </button>
               <p className="mt-3 text-center text-[0.76rem] text-mist-2">
                 Al reservar aceptas nuestra política de cancelación de 24 horas.
