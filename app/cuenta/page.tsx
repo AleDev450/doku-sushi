@@ -15,7 +15,12 @@ export default async function CuentaPage() {
   const me = await getCurrentProfile();
   if (!me) redirect("/login?next=/cuenta");
 
-  const feedback = await getUserFeedback(me.id);
+  let feedback: Awaited<ReturnType<typeof getUserFeedback>> = [];
+  try {
+    feedback = await getUserFeedback(me.id);
+  } catch {
+    /* si falta config/tabla, mostramos la cuenta igual */
+  }
   const displayName = me.full_name || me.email.split("@")[0];
 
   return (
