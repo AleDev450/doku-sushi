@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Camera, Users, Video, Heart, Star } from "lucide-react";
+import { ArrowLeft, Camera, Users, Video } from "lucide-react";
 import { getExperience, getExperienceSlugs } from "@/lib/api";
 import Reveal from "@/components/ui/Reveal";
 import Stars from "@/components/ui/Stars";
@@ -75,34 +75,7 @@ export default async function ExperienciaDetailPage({ params }: { params: { slug
         </div>
       </section>
 
-      {/* Top comentarios */}
-      <section className="border-t border-[var(--line)] bg-ink-2 py-16">
-        <div className="wrap">
-          <h2 className="mb-8 font-display text-[1.7rem] font-semibold">
-            Lo que dijeron <span className="text-seal">quienes fueron.</span>
-          </h2>
-          <div className="grid gap-5 md:grid-cols-2">
-            {exp.topComments.map((c) => (
-              <Reveal key={c.id} className="rounded-lg border border-[var(--line)] bg-ink p-6">
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="h-11 w-11 rounded-full bg-cover bg-center" style={{ backgroundImage: `url('${c.avatar}')` }} />
-                  <div className="flex-1">
-                    <div className="font-medium">{c.name}</div>
-                    <Stars rating={c.rating} className="text-[0.8rem]" />
-                  </div>
-                  <span className="flex items-center gap-1.5 text-[0.8rem] text-mist">
-                    <Heart size={14} className="fill-seal text-seal" /> {c.likes}
-                  </span>
-                </div>
-                <p className="text-[0.95rem] font-light leading-relaxed text-mist">{c.text}</p>
-              </Reveal>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      <Feedback targetType="experience" targetSlug={exp.slug} />
+      <Feedback targetType="experience" targetSlug={exp.slug} title="Lo que dijeron" highlight="quienes fueron." />
     </>
   );
 }

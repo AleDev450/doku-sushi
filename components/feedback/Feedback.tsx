@@ -23,9 +23,13 @@ type Me = { loggedIn: boolean; id?: string; name?: string; avatar?: string | nul
 export default function Feedback({
   targetType,
   targetSlug,
+  title = "Feedback de quienes",
+  highlight = "vivieron esto.",
 }: {
   targetType: "event" | "experience";
   targetSlug: string;
+  title?: string;
+  highlight?: string;
 }) {
   const pathname = usePathname();
   const [items, setItems] = useState<Item[]>([]);
@@ -76,7 +80,6 @@ export default function Feedback({
 
   async function like(item: Item) {
     if (!me.loggedIn) return;
-    // Optimista
     setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, likedByMe: !i.likedByMe, likes: i.likes + (i.likedByMe ? -1 : 1) } : i)));
     const res = await fetch(`/api/feedback/${item.id}/like`, { method: "POST" });
     if (res.ok) {
@@ -92,13 +95,12 @@ export default function Feedback({
   }
 
   return (
-    <section className="border-t border-[var(--line)] bg-ink py-16">
-      <div className="wrap max-w-[760px]">
+    <section className="border-t border-[var(--line)] bg-ink-2 py-16">
+      <div className="wrap">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <span className="kicker mb-2 block">お客様の声 · Comunidad</span>
-            <h2 className="font-display text-[1.8rem] font-semibold">Feedback de quienes vivieron esto</h2>
-          </div>
+          <h2 className="font-display text-[1.7rem] font-semibold">
+            {title} <span className="text-seal">{highlight}</span>
+          </h2>
           {items.length > 0 && (
             <div className="flex items-center gap-2 text-mist">
               <Star size={18} className="fill-seal text-seal" />
@@ -108,84 +110,75 @@ export default function Feedback({
           )}
         </div>
 
-        {/* Form o CTA de login */}
-        {me.loggedIn ? (
-          <form onSubmit={submit} className="mb-10 rounded-xl border border-[var(--line)] bg-ink-2 p-5">
-            <div className="mb-3 flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button key={n} type="button" onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)} onClick={() => setRating(n)} aria-label={`${n} estrellas`}>
-                  <Star size={22} className={cn("transition-colors", (hover || rating) >= n ? "fill-seal text-seal" : "text-mist-2")} />
-                </button>
-              ))}
-            </div>
-            <textarea
-              rows={3}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Cuenta cómo viviste esta experiencia…"
-              required
-              className="field-input resize-none"
-            />
-            {error && <p className="mt-2 text-[0.8rem] text-seal">{error}</p>}
-            <div className="mt-3 flex justify-end">
-              <button type="submit" disabled={submitting} className="btn btn-solid !px-5 disabled:opacity-60">
-                {submitting ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} Publicar
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="mb-10 rounded-xl border border-dashed border-[var(--line)] bg-ink-2 p-6 text-center">
-            <p className="text-[0.92rem] text-mist">Inicia sesión para dejar tu feedback y dar like.</p>
-            <Link href={`/login?next=${encodeURIComponent(pathname)}`} className="btn btn-solid mt-4 !px-6">Iniciar sesión</Link>
-          </div>
-        )}
-
-        {/* Lista */}
+        {/* Comentarios con foto */}
         {loading ? (
           <p className="text-mist-2">Cargando…</p>
         ) : items.length === 0 ? (
-          <p className="text-mist-2">Aún no hay comentarios. Sé el primero.</p>
+          <p className="text-mist-2">Aún no hay comentarios. {me.loggedIn ? "Sé el primero abajo." : "Inicia sesión para ser el primero."}</p>
         ) : (
-          <div className="space-y-5">
+          <div className="grid gap-5 md:grid-cols-2">
             {items.map((it) => {
               const canDelete = me.loggedIn && (me.id === it.userId || me.isStaff);
               return (
-                <div key={it.id} className="rounded-xl border border-[var(--line)] bg-ink-2 p-5">
-                  <div className="flex items-start gap-3">
+                <div key={it.id} className="rounded-lg border border-[var(--line)] bg-ink p-6">
+                  <div className="mb-4 flex items-center gap-3">
                     <Avatar name={it.authorName} avatar={it.authorAvatar} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="font-medium text-white">{it.authorName}</div>
-                        <div className="flex items-center gap-0.5">
-                          {[1, 2, 3, 4, 5].map((n) => (
-                            <Star key={n} size={13} className={n <= it.rating ? "fill-seal text-seal" : "text-mist-2"} />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="mt-2 text-[0.92rem] leading-relaxed text-neutral-300">{it.text}</p>
-                      <div className="mt-3 flex items-center gap-4 text-[0.8rem] text-mist-2">
-                        <button
-                          onClick={() => like(it)}
-                          disabled={!me.loggedIn}
-                          className={cn("inline-flex items-center gap-1.5 transition-colors", it.likedByMe ? "text-seal" : "hover:text-white", !me.loggedIn && "cursor-not-allowed")}
-                          title={me.loggedIn ? "Me gusta" : "Inicia sesión para dar like"}
-                        >
-                          <Heart size={15} className={it.likedByMe ? "fill-seal" : ""} /> {it.likes}
-                        </button>
-                        <span>{new Date(it.createdAt).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })}</span>
-                        {canDelete && (
-                          <button onClick={() => remove(it)} className="inline-flex items-center gap-1 hover:text-seal" title="Eliminar">
-                            <Trash2 size={14} />
-                          </button>
-                        )}
+                    <div className="flex-1">
+                      <div className="font-medium text-white">{it.authorName}</div>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star key={n} size={13} className={n <= it.rating ? "fill-seal text-seal" : "text-mist-2"} />
+                        ))}
                       </div>
                     </div>
+                    <button
+                      onClick={() => like(it)}
+                      disabled={!me.loggedIn}
+                      className={cn("flex items-center gap-1.5 text-[0.8rem] transition-colors", it.likedByMe ? "text-seal" : "text-mist hover:text-white", !me.loggedIn && "cursor-not-allowed")}
+                      title={me.loggedIn ? "Me gusta" : "Inicia sesión para dar like"}
+                    >
+                      <Heart size={14} className={it.likedByMe ? "fill-seal" : ""} /> {it.likes}
+                    </button>
                   </div>
+                  <p className="text-[0.95rem] font-light leading-relaxed text-mist">{it.text}</p>
+                  {canDelete && (
+                    <button onClick={() => remove(it)} className="mt-3 inline-flex items-center gap-1 text-[0.72rem] text-mist-2 hover:text-seal">
+                      <Trash2 size={12} /> Eliminar
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
+
+        {/* Dejar comentario — al final */}
+        <div className="mt-10 max-w-[640px]">
+          {me.loggedIn ? (
+            <form onSubmit={submit} className="rounded-xl border border-[var(--line)] bg-ink p-5">
+              <div className="mb-2 text-[0.82rem] font-medium text-white">Deja tu comentario</div>
+              <div className="mb-3 flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button key={n} type="button" onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)} onClick={() => setRating(n)} aria-label={`${n} estrellas`}>
+                    <Star size={22} className={cn("transition-colors", (hover || rating) >= n ? "fill-seal text-seal" : "text-mist-2")} />
+                  </button>
+                ))}
+              </div>
+              <textarea rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="Cuenta cómo viviste esta experiencia…" required className="field-input resize-none" />
+              {error && <p className="mt-2 text-[0.8rem] text-seal">{error}</p>}
+              <div className="mt-3 flex justify-end">
+                <button type="submit" disabled={submitting} className="btn btn-solid !px-5 disabled:opacity-60">
+                  {submitting ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} Publicar
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="rounded-xl border border-dashed border-[var(--line)] bg-ink p-6 text-center">
+              <p className="text-[0.92rem] text-mist">Inicia sesión para dejar tu comentario y dar like.</p>
+              <Link href={`/login?next=${encodeURIComponent(pathname)}`} className="btn btn-solid mt-4 !px-6">Iniciar sesión</Link>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -194,10 +187,10 @@ export default function Feedback({
 function Avatar({ name, avatar }: { name: string; avatar: string | null }) {
   if (avatar) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={avatar} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />;
+    return <img src={avatar} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />;
   }
   return (
-    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-seal/20 font-display text-[0.95rem] font-semibold text-seal">
+    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-seal/20 font-display text-[1rem] font-semibold text-seal">
       {name.charAt(0).toUpperCase()}
     </span>
   );

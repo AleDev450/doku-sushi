@@ -149,7 +149,7 @@ export default async function EventoDetailPage({ params }: { params: { slug: str
         </div>
       </section>
 
-      <Feedback targetType="event" targetSlug={event.slug} />
+      <Feedback targetType="event" targetSlug={event.slug} title="Lo que dijeron los" highlight="asistentes." />
     </>
   );
 }
