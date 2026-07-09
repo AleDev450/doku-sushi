@@ -30,9 +30,17 @@ export async function PATCH(req: Request) {
 
   const fullName = typeof b.full_name === "string" ? b.full_name.trim() : "";
   if (!fullName) return NextResponse.json({ error: "El nombre no puede quedar vacío." }, { status: 422 });
+  const avatarUrl = typeof b.avatar_url === "string" ? b.avatar_url.trim() : undefined;
+
+  const profileUpdate: Record<string, unknown> = { full_name: fullName };
+  const metaUpdate: Record<string, unknown> = { full_name: fullName };
+  if (avatarUrl !== undefined) {
+    profileUpdate.avatar_url = avatarUrl || null;
+    metaUpdate.avatar_url = avatarUrl || null;
+  }
 
   const sb = createAdminClient();
-  await sb.from("profiles").update({ full_name: fullName }).eq("id", me.id);
-  await sb.auth.admin.updateUserById(me.id, { user_metadata: { full_name: fullName } });
-  return NextResponse.json({ ok: true, name: fullName });
+  await sb.from("profiles").update(profileUpdate).eq("id", me.id);
+  await sb.auth.admin.updateUserById(me.id, { user_metadata: metaUpdate });
+  return NextResponse.json({ ok: true, name: fullName, avatar: avatarUrl });
 }

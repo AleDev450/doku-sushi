@@ -42,7 +42,7 @@ export default async function CuentaPage() {
           </div>
         </div>
 
-        <AccountForm initialName={displayName} email={me.email} />
+        <AccountForm initialName={displayName} email={me.email} initialAvatar={me.avatar_url ?? ""} />
 
         {me.role !== "user" && (
           <Link href="/admin" className="mt-4 inline-block text-[0.85rem] text-seal hover:underline">→ Ir al panel de administración</Link>
