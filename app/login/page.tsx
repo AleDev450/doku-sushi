@@ -29,7 +29,7 @@ function LoginForm() {
     searchParams.get("error") === "inactive"
       ? "Tu cuenta está pendiente de activación por el administrador."
       : searchParams.get("error") === "oauth"
-      ? "No se pudo completar el inicio con la red social."
+      ? `No se pudo completar el inicio con la red social.${searchParams.get("reason") ? " — " + searchParams.get("reason") : ""}`
       : null
   );
   const [info, setInfo] = useState<string | null>(null);
