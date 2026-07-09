@@ -45,10 +45,10 @@ export function canAccessAdmin(profile: Profile | null): profile is Profile {
   return Boolean(profile && profile.active && (profile.role === "superadmin" || profile.role === "editor"));
 }
 
-/** Guard para acciones de cualquier usuario logueado y activo (incluye rol 'user'). */
+/** Guard para acciones de cualquier usuario logueado (comunidad). El acceso al
+ *  panel se controla aparte con canAccessAdmin; aquí basta con estar logueado. */
 export async function requireUser(): Promise<Profile | null> {
-  const profile = await getCurrentProfile();
-  return profile && profile.active ? profile : null;
+  return (await getCurrentProfile()) ?? null;
 }
 
 /**
