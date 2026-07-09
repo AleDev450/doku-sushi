@@ -30,6 +30,25 @@ function supabaseEnabled(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
+// Detecta el tipo REAL del archivo por sus primeros bytes (magic numbers), sin
+// confiar en file.type (que lo manda el navegador y es falsificable). Devuelve
+// "image" | "video" | null. Evita que suban HTML/JS/exe disfrazados de imagen.
+function sniffKind(b: Buffer): "image" | "video" | null {
+  if (b.length < 12) return null;
+  const at = (i: number, s: string) => b.toString("latin1", i, i + s.length) === s;
+
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image";                       // JPEG
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return "image";      // PNG
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return "image";                       // GIF
+  if (at(0, "RIFF") && at(8, "WEBP")) return "image";                                        // WEBP
+  if (at(4, "ftyp")) {
+    const brand = b.toString("latin1", 8, 12);                                               // ISO-BMFF
+    return brand.startsWith("avif") || brand.startsWith("avis") ? "image" : "video";         // AVIF vs MP4/MOV
+  }
+  if (b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return "video";       // WEBM/Matroska
+  return null;
+}
+
 export async function POST(req: Request) {
   if (!(await requireUser())) {
     return NextResponse.json({ error: "Inicia sesión para subir archivos." }, { status: 401 });
@@ -64,6 +83,15 @@ export async function POST(req: Request) {
   const ext = path.extname(file.name).toLowerCase() || EXT_BY_TYPE[file.type];
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
   const bytes = Buffer.from(await file.arrayBuffer());
+
+  // El contenido real debe coincidir con el tipo declarado (anti-disfraz).
+  const declaredKind = file.type.startsWith("image/") ? "image" : "video";
+  if (sniffKind(bytes) !== declaredKind) {
+    return NextResponse.json(
+      { error: "El contenido del archivo no coincide con su tipo. Sube una imagen o video real." },
+      { status: 415 }
+    );
+  }
 
   // --- Supabase Storage ---
   if (supabaseEnabled()) {

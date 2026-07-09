@@ -4,7 +4,9 @@ import { useState } from "react";
 import { Users, Calendar, Clock, PartyPopper, Check } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import Reveal from "@/components/ui/Reveal";
+import Honeypot from "@/components/ui/Honeypot";
 import { cn } from "@/lib/utils";
+import { TIMESTAMP_FIELD } from "@/lib/antibot";
 import type { Header } from "@/lib/content";
 
 const TIMES = ["12:30", "13:30", "19:00", "20:00", "20:30", "21:00", "21:30", "22:00"];
@@ -19,6 +21,8 @@ export default function ReservarForm({ header }: { header: Header }) {
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hp, setHp] = useState(""); // honeypot (queda vacío para humanos)
+  const [renderedAt] = useState(() => Date.now());
 
   const valid = date && contact.name && contact.phone && contact.email.includes("@");
 
@@ -38,6 +42,8 @@ export default function ReservarForm({ header }: { header: Header }) {
           time,
           people,
           notes: `Ocasión: ${occasion}`,
+          website: hp,
+          [TIMESTAMP_FIELD]: renderedAt,
         }),
       });
       const data = await res.json();
@@ -130,6 +136,8 @@ export default function ReservarForm({ header }: { header: Header }) {
                   ))}
                 </div>
               </Block>
+
+              <Honeypot value={hp} onChange={setHp} />
 
               {/* Datos */}
               <div className="mt-8 grid gap-5 border-t border-[var(--line)] pt-8 sm:grid-cols-2">

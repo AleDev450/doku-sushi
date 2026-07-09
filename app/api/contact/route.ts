@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createMessage, listMessages } from "@/lib/operations";
 import { requirePermission } from "@/lib/rbac";
+import { isBotSubmission } from "@/lib/antibot";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,6 +22,11 @@ export async function POST(req: Request) {
     b = (await req.json()) as Record<string, unknown>;
   } catch {
     return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
+  }
+
+  // Anti-bot: si es spam automatizado, fingimos éxito y no guardamos nada.
+  if (isBotSubmission(b)) {
+    return NextResponse.json({ ok: true }, { status: 201 });
   }
 
   const name = typeof b.name === "string" ? b.name.trim() : "";

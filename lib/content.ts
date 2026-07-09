@@ -147,7 +147,16 @@ export async function getPageContent<T extends object>(key: string, defaults: T)
 }
 
 export async function setPageContent(key: string, data: object): Promise<void> {
-  await createAdminClient()
+  const { error } = await createAdminClient()
     .from("page_content")
     .upsert({ key, data, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  // Si la escritura falla (p. ej. falta correr content.sql), NO fingir éxito:
+  // propagamos el error para que la API devuelva 500 y el admin lo muestre.
+  if (error) {
+    throw new Error(
+      error.message.includes("page_content") || error.code === "42P01"
+        ? "La tabla 'page_content' no existe. Corre supabase/content.sql en el SQL Editor de Supabase."
+        : error.message
+    );
+  }
 }

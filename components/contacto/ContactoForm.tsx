@@ -4,6 +4,8 @@ import { useState } from "react";
 import { MapPin, Phone, Clock, Mail, Instagram, Facebook, Send, Check } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import Reveal from "@/components/ui/Reveal";
+import Honeypot from "@/components/ui/Honeypot";
+import { TIMESTAMP_FIELD } from "@/lib/antibot";
 import type { Header } from "@/lib/content";
 import type { SiteSettings } from "@/lib/types";
 
@@ -12,6 +14,8 @@ export default function ContactoForm({ header, settings }: { header: Header; set
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hp, setHp] = useState(""); // honeypot (queda vacío para humanos)
+  const [renderedAt] = useState(() => Date.now());
 
   async function submit() {
     if (!(form.name && form.email.includes("@") && form.message)) return;
@@ -21,7 +25,7 @@ export default function ContactoForm({ header, settings }: { header: Header; set
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, website: hp, [TIMESTAMP_FIELD]: renderedAt }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "No se pudo enviar.");
@@ -91,6 +95,7 @@ export default function ContactoForm({ header, settings }: { header: Header; set
               ) : (
                 <>
                   <h3 className="mb-6 font-display text-[1.6rem] font-semibold">Escríbenos</h3>
+                  <Honeypot value={hp} onChange={setHp} />
                   <div className="space-y-5">
                     <div>
                       <label className="field-label">Nombre</label>
